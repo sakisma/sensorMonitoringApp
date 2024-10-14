@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colors for the app -->
+    <color name="greenhouseBackground">#E8F5E9</color> <!-- Light green background -->
+    <color name="greenhousePrimaryText">#2E7D32</color> <!-- Dark green for titles -->
+    <color name="greenhouseSecondaryText">#558B2F</color> <!-- Green for labels -->
+    <color name="greenhouseValueText">#1B5E20</color> <!-- Bold dark green for values -->
+    <color name="borderColor">#AED581</color> <!-- Border around sections -->
+</resources>

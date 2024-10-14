@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">SensorMonitoringApp</string>
+    <string name="title_activity_menu">menu</string>
+    <string-array name="date_ranges">
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+    </string-array>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
+</resources>
