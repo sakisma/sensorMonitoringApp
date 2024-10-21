@@ -39,6 +39,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.addDrawerListener(drawerToggle);
         drawerToggle.syncState();  // This will sync the hamburger icon
 
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
         // Initialize Firebase Database
         database = FirebaseDatabase.getInstance();
         sensorDataRef = database.getReference("sensorData");
@@ -63,31 +66,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.closeDrawers();  // Close the drawer after selection
         return true;
     }
-
-//    private void fetchLatestData() {
-//        // Query to get the latest entry from Firebase
-//        sensorDataRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                    String latestTemp = snapshot.child("temp").getValue().toString();
-//                    String latestMoisture = snapshot.child("moisture").getValue().toString();
-//
-//                    // Update the UI with the latest values
-//                    TextView tempValueText = findViewById(R.id.tempValue);
-//                    TextView moistureValueText = findViewById(R.id.moistureValue);
-//
-//                    tempValueText.setText(latestTemp + " °C");
-//                    moistureValueText.setText(latestMoisture + " %");
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                // Handle database error
-//            }
-//        });
-//    }
 
     private void fetchLatestData() {
         // Query to get the latest date entry from Firebase
@@ -146,3 +124,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 }
+
+//    private void fetchLatestData() {
+//        // Query to get the latest entry from Firebase
+//        sensorDataRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                    String latestTemp = snapshot.child("temp").getValue().toString();
+//                    String latestMoisture = snapshot.child("moisture").getValue().toString();
+//
+//                    // Update the UI with the latest values
+//                    TextView tempValueText = findViewById(R.id.tempValue);
+//                    TextView moistureValueText = findViewById(R.id.moistureValue);
+//
+//                    tempValueText.setText(latestTemp + " °C");
+//                    moistureValueText.setText(latestMoisture + " %");
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                // Handle database error
+//            }
+//        });
+//    }
