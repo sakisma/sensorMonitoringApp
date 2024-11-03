@@ -15,6 +15,11 @@
 <!--        android:id="@+id/heatmap_chart"-->
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="250dp"  />-->
+    <com.charting.charts.HeatMapChart
+        android:id="@+id/heatmap_chart"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginBottom="16dp" />
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
