@@ -5,36 +5,41 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Spinner for selecting date range -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Επιλογή Εύρους Ημερομηνίας"
+        android:textSize="16sp"
+        android:paddingBottom="8dp"/>
+
     <Spinner
         android:id="@+id/dateRangeSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="16dp" />
 
-    <!-- Heatmap GridLayout for visualizing temperature/moisture values -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Heatmap Data"
+        android:textSize="18sp"
+        android:layout_gravity="center"/>
+
     <GridLayout
         android:id="@+id/heatmap_grid"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:columnCount="10"
-        android:rowCount="10"
-        android:background="#F0F0F0"
-        android:padding="4dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:columnCount="6"
+        android:rowCount="6"
+        android:padding="8dp"
+        android:layout_margin="8dp">
+    </GridLayout>
 
-    <!-- Line Chart for historical temperature data over time -->
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Bar Chart for other data representation (e.g., average values) -->
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/bar_chart"
-        android:layout_width="match_parent"
-        android:layout_height="250dp" />
-
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temperature Range"
+        android:layout_gravity="center"
+        android:paddingTop="8dp"/>
 </LinearLayout>

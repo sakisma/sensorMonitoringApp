@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridLayout;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,9 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoricalDataFragment extends Fragment {
-    private GridLayout heatmapGrid;
     private FirebaseDatabase database;
     private DatabaseReference sensorDataRef;
+    private Spinner dateRangeSpinner;
+    private GridLayout heatmapGrid;
 
     @Nullable
     @Override
@@ -31,78 +33,83 @@ public class HistoricalDataFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_historical_data, container, false);
 
         heatmapGrid = view.findViewById(R.id.heatmap_grid);
+        dateRangeSpinner = view.findViewById(R.id.dateRangeSpinner);
         database = FirebaseDatabase.getInstance();
         sensorDataRef = database.getReference("sensorData");
 
-        fetchHeatmapData();
+        fetchDataAndPopulateHeatmap();
 
         return view;
     }
 
-    private void fetchHeatmapData() {
+    private void fetchDataAndPopulateHeatmap() {
         sensorDataRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<Float> temperatureValues = new ArrayList<>();
+                List<Integer> temperatureValues = new ArrayList<>();
 
+                // Extract temperature data from Firebase
                 for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
                     for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
                         Object tempObject = timeSnapshot.child("temp").getValue();
                         if (tempObject != null) {
-                            float tempValue = Float.parseFloat(tempObject.toString());
+                            int tempValue = Integer.parseInt(tempObject.toString());
                             temperatureValues.add(tempValue);
                         }
                     }
                 }
 
+                // Populate the heatmap with data
                 populateHeatmap(temperatureValues);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error
+                // Handle error if needed
             }
         });
     }
 
-    private void populateHeatmap(List<Float> temperatureValues) {
-        // Clear any existing views in the grid
+    private void populateHeatmap(List<Integer> temperatureValues) {
         heatmapGrid.removeAllViews();
 
-        // Calculate number of rows and columns for grid layout
-        int totalCells = heatmapGrid.getColumnCount() * heatmapGrid.getRowCount();
+        int gridSize = 6; // Προσαρμόσιμο μέγεθος grid (6x6 για αυτό το παράδειγμα)
+        int index = 0;
 
-        for (int i = 0; i < totalCells && i < temperatureValues.size(); i++) {
-            // Create a new View for each cell in the heatmap
-            View cell = new View(getContext());
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
+                View cell = new View(getContext());
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                params.width = 0;
+                params.height = 0;
+                params.rowSpec = GridLayout.spec(row, 1, 1f);
+                params.columnSpec = GridLayout.spec(col, 1, 1f);
+                params.setMargins(4, 4, 4, 4);
+                cell.setLayoutParams(params);
 
-            // Set cell background color based on temperature
-            float temperature = temperatureValues.get(i);
-            cell.setBackgroundColor(getColorForTemperature(temperature));
+                // Ελέγχει αν υπάρχουν αρκετές τιμές θερμοκρασίας
+                if (index < temperatureValues.size()) {
+                    int temperature = temperatureValues.get(index);
+                    cell.setBackgroundColor(getColorForTemperature(temperature));
+                    index++;
+                } else {
+                    cell.setBackgroundColor(Color.GRAY); // Χρώμα για κενά κελιά
+                }
 
-            // Set layout parameters for each cell
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = 0;
-            params.height = 0;
-            params.rowSpec = GridLayout.spec(i / heatmapGrid.getColumnCount(), 1, 1f);
-            params.columnSpec = GridLayout.spec(i % heatmapGrid.getColumnCount(), 1, 1f);
-            cell.setLayoutParams(params);
-
-            // Add cell to the grid
-            heatmapGrid.addView(cell);
+                heatmapGrid.addView(cell);
+            }
         }
     }
 
-    private int getColorForTemperature(float temperature) {
-        // Customize these ranges based on your needs
-        if (temperature < 15) {
-            return Color.BLUE;   // Cold
-        } else if (temperature < 25) {
-            return Color.GREEN;  // Mild
-        } else if (temperature < 35) {
-            return Color.YELLOW; // Warm
+    private int getColorForTemperature(int temperature) {
+        if (temperature <= 20) {
+            return Color.BLUE;
+        } else if (temperature <= 25) {
+            return Color.GREEN;
+        } else if (temperature <= 30) {
+            return Color.YELLOW;
         } else {
-            return Color.RED;    // Hot
+            return Color.RED;
         }
     }
 }
