@@ -5,22 +5,33 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Spinner for selecting date range -->
     <Spinner
         android:id="@+id/dateRangeSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="16dp" />
 
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/bar_chart"
+    <!-- Heatmap GridLayout for visualizing temperature/moisture values -->
+    <GridLayout
+        android:id="@+id/heatmap_grid"
         android:layout_width="match_parent"
-        android:layout_height="250dp" />
+        android:layout_height="250dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:columnCount="10"
+        android:rowCount="10"
+        android:background="#F0F0F0"
+        android:padding="4dp" />
 
+    <!-- Line Chart for historical temperature data over time -->
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
         android:layout_width="match_parent"
-        android:layout_height="250dp" />
+        android:layout_height="250dp"
+        android:layout_marginBottom="16dp" />
 
+    <!-- Bar Chart for other data representation (e.g., average values) -->
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/bar_chart"
         android:layout_width="match_parent"
