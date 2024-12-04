@@ -55,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             fragment = new HomeFragment();
         } else if (id == R.id.navigation_historical_data) {
             fragment = new HistoricalDataFragment();
+        } else if (id == R.id.navigation_heatmap) {
+            fragment = new HeatmapFragment();
+        } else if (id == R.id.navigation_settings) {
+                fragment = new SettingsFragment();
         } else {
             return false;
         }
@@ -127,3 +131,4 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         transaction.commit();
     }
 }
+
