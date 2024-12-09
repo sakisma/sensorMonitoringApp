@@ -1,5 +1,9 @@
 package com.arduino.sensormonitoringapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,7 +13,9 @@ import android.widget.GridLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -45,14 +51,30 @@ public class HeatmapFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 List<Float> temperatureValues = new ArrayList<>();
 
+                // Λήψη του ορίου θερμοκρασίας από τις Ρυθμίσεις
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                float temperatureThreshold = Float.parseFloat(sharedPreferences.getString("temperature_threshold", "30"));
+
+                boolean thresholdExceeded = false;
+
                 for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
                     for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
                         Object tempObject = timeSnapshot.child("temp").getValue();
                         if (tempObject != null) {
                             float tempValue = Float.parseFloat(tempObject.toString());
                             temperatureValues.add(tempValue);
+
+                            // Έλεγχος αν ξεπερνά το όριο θερμοκρασίας
+                            if (tempValue > temperatureThreshold) {
+                                thresholdExceeded = true;
+                            }
                         }
                     }
+                }
+
+                // Αν ξεπεραστεί το όριο, στείλε ειδοποίηση
+                if (thresholdExceeded) {
+                    sendNotification("Temperature Alert", "A temperature has exceeded " + temperatureThreshold + "°C!");
                 }
 
                 populateHeatmap(temperatureValues);
@@ -60,27 +82,22 @@ public class HeatmapFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error
+                // Διαχείριση σφαλμάτων
             }
         });
     }
 
     private void populateHeatmap(List<Float> temperatureValues) {
-        // Clear any existing views in the grid
         heatmapGrid.removeAllViews();
 
-        // Calculate number of rows and columns for grid layout
         int totalCells = heatmapGrid.getColumnCount() * heatmapGrid.getRowCount();
 
         for (int i = 0; i < totalCells && i < temperatureValues.size(); i++) {
-            // Create a new View for each cell in the heatmap
             View cell = new View(getContext());
 
-            // Set cell background color based on temperature
             float temperature = temperatureValues.get(i);
             cell.setBackgroundColor(getColorForTemperature(temperature));
 
-            // Set layout parameters for each cell
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
@@ -89,21 +106,51 @@ public class HeatmapFragment extends Fragment {
             params.setMargins(4, 4, 4, 4);
             cell.setLayoutParams(params);
 
-            // Add cell to the grid
             heatmapGrid.addView(cell);
         }
     }
 
     private int getColorForTemperature(float temperature) {
-        // Customize these ranges based on your needs
         if (temperature < 15) {
-            return Color.BLUE;   // Cold
+            return Color.BLUE;
         } else if (temperature < 25) {
-            return Color.GREEN;  // Mild
+            return Color.GREEN;
         } else if (temperature < 35) {
-            return Color.YELLOW; // Warm
+            return Color.YELLOW;
         } else {
-            return Color.RED;    // Hot
+            return Color.RED;
         }
+    }
+    private void checkTemperatureAndNotify(float currentTemperature) {
+        // Πάρε τις ρυθμίσεις του χρήστη
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean notificationsEnabled = prefs.getBoolean("enable_notifications", true);
+        String maxTemperatureString = prefs.getString("max_temperature", "30");
+        float maxTemperature = Float.parseFloat(maxTemperatureString);
+
+        // Έλεγχος: Αν είναι ενεργοποιημένες οι ειδοποιήσεις και ξεπεράστηκε η θερμοκρασία
+        if (notificationsEnabled && currentTemperature > maxTemperature) {
+            sendNotification("Temperature Alert", "The temperature exceeded " + maxTemperature + "°C!");
+        }
+    }
+
+    private void sendNotification(String title, String message) {
+        NotificationManager notificationManager = (NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "temperature_alerts";
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Temperature Alerts", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Notifications for temperature threshold alerts");
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), channelId)
+                .setSmallIcon(R.drawable.ic_notification) // Βεβαιώσου ότι υπάρχει το εικονίδιο
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        notificationManager.notify(1, builder.build());
     }
 }

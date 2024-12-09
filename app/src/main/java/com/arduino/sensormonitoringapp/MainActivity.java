@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         } else if (id == R.id.navigation_heatmap) {
             fragment = new HeatmapFragment();
         } else if (id == R.id.navigation_settings) {
-                fragment = new SettingsFragment();
+            fragment = new SettingsFragment();
         } else {
             return false;
         }
