@@ -34,7 +34,7 @@ import java.util.Locale;
 
 public class HistoricalDataFragment extends Fragment {
     private LineChart lineChart;
-//    private HeatMapChart heatMapChart;
+    //    private HeatMapChart heatMapChart;
     private BarChart barChart;
     private FirebaseDatabase database;
     private DatabaseReference sensorDataRef;

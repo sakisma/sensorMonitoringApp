@@ -17,56 +17,40 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class HomeFragment extends Fragment {
-    private FirebaseDatabase database;
+    private TextView tempValueText, moistureValueText;
     private DatabaseReference sensorDataRef;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        database = FirebaseDatabase.getInstance();
-        sensorDataRef = database.getReference("sensorData");
+        tempValueText = view.findViewById(R.id.tempValue);
+        moistureValueText = view.findViewById(R.id.moistureValue);
+
+        sensorDataRef = FirebaseDatabase.getInstance().getReference("sensorData");
         fetchLatestData();
 
         return view;
     }
 
     private void fetchLatestData() {
-        // Query to get the latest date entry from Firebase
-        sensorDataRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
+        sensorDataRef.limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-                    String latestDate = dateSnapshot.getKey();  // Get the latest date (e.g., "2024-09-26")
-
-                    // Query to get the latest time entry under the latest date
-                    DatabaseReference timeRef = sensorDataRef.child(latestDate);
-                    timeRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
+                    DatabaseReference timeRef = sensorDataRef.child(dateSnapshot.getKey());
+                    timeRef.limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot timeSnapshot) {
                             for (DataSnapshot timeEntry : timeSnapshot.getChildren()) {
-                                String latestTime = timeEntry.getKey();  // Get the latest time (e.g., "01:38:03")
-
-                                // Fetch the latest temperature and moisture values
                                 Object tempObject = timeEntry.child("temp").getValue();
                                 Object moistureObject = timeEntry.child("moisture").getValue();
 
-                                // Check if temp and moisture values are not null
                                 if (tempObject != null && moistureObject != null) {
-                                    String latestTemp = tempObject.toString();
-                                    String latestMoisture = moistureObject.toString();
-
-                                    // Update the UI with the latest values
-                                    TextView tempValueText = requireView().findViewById(R.id.tempValue);
-                                    TextView moistureValueText = requireView().findViewById(R.id.moistureValue);
-
-                                    tempValueText.setText(latestTemp + " °C");
-                                    moistureValueText.setText(latestMoisture + " %");
+                                    tempValueText.setText(tempObject.toString() + " °C");
+                                    moistureValueText.setText(moistureObject.toString() + " %");
                                 } else {
-                                    // Handle missing or null values here (optional)
-                                    TextView tempValueText = requireView().findViewById(R.id.tempValue);
-                                    TextView moistureValueText = requireView().findViewById(R.id.moistureValue);
-
                                     tempValueText.setText("-- °C");
                                     moistureValueText.setText("-- %");
                                 }
@@ -74,19 +58,13 @@ public class HomeFragment extends Fragment {
                         }
 
                         @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            // Handle database error
-                        }
+                        public void onCancelled(@NonNull DatabaseError error) { }
                     });
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle database error
-            }
+            public void onCancelled(@NonNull DatabaseError error) { }
         });
     }
-
-
 }
