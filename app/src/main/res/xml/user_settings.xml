@@ -11,8 +11,16 @@
     <EditTextPreference
         android:key="max_temperature"
         android:title="Set Max Temperature"
-        android:summary="Enter the temperature threshold"
+        android:summary="Enter the maximum temperature threshold"
         android:inputType="numberDecimal"
         android:defaultValue="30" />
+
+    <!-- Ρύθμιση για Ελάχιστη Θερμοκρασία -->
+    <EditTextPreference
+        android:key="min_temperature"
+        android:title="Set Min Temperature"
+        android:summary="Enter the minimum temperature threshold"
+        android:inputType="numberDecimal"
+        android:defaultValue="10" />
 
 </PreferenceScreen>

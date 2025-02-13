@@ -44,6 +44,11 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
         // Fetch latest data and update the UI
         fetchLatestData();
+
+        // Start the Temperature Monitoring Service
+        Intent serviceIntent = new Intent(this, TemperatureMonitorService.class);
+        startService(serviceIntent);
+
     }
 
     @Override
