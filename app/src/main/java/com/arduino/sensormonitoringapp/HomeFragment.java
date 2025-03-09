@@ -34,6 +34,12 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchLatestData();
+    }
+
     private void fetchLatestData() {
         sensorDataRef.limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

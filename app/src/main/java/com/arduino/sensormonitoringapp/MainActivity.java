@@ -1,6 +1,7 @@
 package com.arduino.sensormonitoringapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -31,19 +32,34 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        // Bottom navigation
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnItemSelectedListener(this);
-        loadFragment(new HomeFragment());
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        boolean isSetupCompleted = prefs.getBoolean("setup_completed", false);
 
-        // Initialize Firebase Database
-        database = FirebaseDatabase.getInstance();
-        sensorDataRef = database.getReference("sensorData");
+        if (!isSetupCompleted) {
+            startActivity(new Intent(this, SetupArduinoWifi.class));
+            finish();
+        } else {
+            setContentView(R.layout.activity_main);
 
-        // Fetch latest data and update the UI
-        fetchLatestData();
+            // Bottom navigation
+            bottomNavigationView = findViewById(R.id.bottom_navigation);
+            bottomNavigationView.setOnItemSelectedListener(this);
+            loadFragment(new HomeFragment());
+
+//            // Initialize Firebase Database
+//            database = FirebaseDatabase.getInstance();
+//            sensorDataRef = database.getReference("sensorData");
+//
+//            // Fetch latest data and update the UI
+//            fetchLatestData();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        fetchLatestData();
     }
 
     @Override

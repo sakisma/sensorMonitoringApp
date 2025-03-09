@@ -1,0 +1,49 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Title for the Setup Screen -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Arduino WiFi Setup"
+        android:textSize="24sp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Spinner for SSID Selection -->
+    <Spinner
+        android:id="@+id/spinnerSSID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown"
+        android:prompt="@string/select_ssid_prompt"/>
+
+    <!-- Button to Scan for Networks -->
+    <Button
+        android:id="@+id/btnScan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan Networks"
+        android:layout_marginTop="8dp"/>
+
+    <!-- EditText for WiFi Password -->
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter WiFi Password"
+        android:inputType="textPassword"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Button to Configure Arduino WiFi -->
+    <Button
+        android:id="@+id/btnConfigure"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Configure Arduino WiFi"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
