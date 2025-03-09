@@ -3,6 +3,7 @@ package com.arduino.sensormonitoringapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.TextView;
 
@@ -26,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
     private FirebaseDatabase database;
+    private DatabaseHelper databaseHelper;
     private DatabaseReference sensorDataRef;
     private BottomNavigationView bottomNavigationView;
 
@@ -34,7 +36,8 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         super.onCreate(savedInstanceState);
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        boolean isSetupCompleted = prefs.getBoolean("setup_completed", false);
+        // todo set this up to false.
+        boolean isSetupCompleted = prefs.getBoolean("setup_completed", true);
 
         if (!isSetupCompleted) {
             startActivity(new Intent(this, SetupArduinoWifi.class));
@@ -48,12 +51,51 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             loadFragment(new HomeFragment());
 
 //            // Initialize Firebase Database
-//            database = FirebaseDatabase.getInstance();
-//            sensorDataRef = database.getReference("sensorData");
-//
-//            // Fetch latest data and update the UI
-//            fetchLatestData();
+            database = FirebaseDatabase.getInstance();
+            sensorDataRef = database.getReference("sensorData");
+
+            databaseHelper = new DatabaseHelper(this);
+
+            syncDataFromFirebase();
         }
+    }
+
+    private void syncDataFromFirebase() {
+//        TODO: only sync records for the day up to previous of the current day of app execution and comment out deletion.
+        sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
+                    String date = dateSnapshot.getKey(); // Get the date (e.g., "2024-09-26")
+                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
+                        String time = timeSnapshot.getKey(); // Get the time (e.g., "01:38:03")
+                        Double temp = timeSnapshot.child("temp").getValue(Double.class);
+                        Double moisture = timeSnapshot.child("moisture").getValue(Double.class);
+
+                        if (temp != null && moisture != null) {
+                            // Insert data into SQLite
+                            long rowId = databaseHelper.insertData(date, time, temp, moisture);
+                            if (rowId != -1) {
+                                // Data inserted successfully, mark as synced in Firebase
+                                timeSnapshot.getRef().child("sync").setValue(true)
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                // Delete synced record from Firebase
+//                                                timeSnapshot.getRef().removeValue();
+                                                Log.i("firebase delete", "onDataChange: data deleted");
+                                            }
+                                        });
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle Firebase error
+            }
+        });
     }
 
     @Override
