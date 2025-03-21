@@ -6,4 +6,8 @@
     <color name="greenhouseSecondaryText">#558B2F</color> <!-- Green for labels -->
     <color name="greenhouseValueText">#1B5E20</color> <!-- Bold dark green for values -->
     <color name="borderColor">#AED581</color> <!-- Border around sections -->
+    <color name="cardBackground">#FFFFFF</color> <!-- White background for cards -->
+    <color name="cardStrokeColor">#E0E0E0</color> <!-- Card border color -->
+    <color name="tempIconColor">#FF5722</color> <!-- Temperature icon color -->
+    <color name="moistureIconColor">#2196F3</color> <!-- Moisture icon color -->
 </resources>

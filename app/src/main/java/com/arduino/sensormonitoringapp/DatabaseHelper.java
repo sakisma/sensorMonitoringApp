@@ -8,13 +8,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "SensorData.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 6;
     private static final String TABLE_NAME = "sensor_data";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_DATE = "date";
     private static final String COLUMN_TIME = "time";
     private static final String COLUMN_TEMPERATURE = "temperature";
     private static final String COLUMN_MOISTURE = "moisture";
+    private static final String COLUMN_TIMESTAMP = "timestamp"; // New column
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -25,6 +26,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_DATE + " TEXT, " +
                 COLUMN_TIME + " TEXT, " +
+                COLUMN_TIMESTAMP + " TEXT, " +
                 COLUMN_TEMPERATURE + " REAL, " +
                 COLUMN_MOISTURE + " REAL)";
         db.execSQL(createTableQuery);
@@ -32,8 +34,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        onCreate(db);
+        if (oldVersion < newVersion) {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+            onCreate(db);
+        }
     }
 
     public long insertData(String date, String time, double temp, double moisture) {
@@ -41,6 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(COLUMN_DATE, date);
         values.put(COLUMN_TIME, time);
+        values.put(COLUMN_TIMESTAMP, date + " " + time);
         values.put(COLUMN_TEMPERATURE, temp);
         values.put(COLUMN_MOISTURE, moisture);
         return db.insert(TABLE_NAME, null, values);
