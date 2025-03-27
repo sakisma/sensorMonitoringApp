@@ -9,5 +9,10 @@
     </string-array>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string-array name="chart_type_options">
+        <item>Temperature</item>
+        <item>Moisture</item>
+        <item>Avg Temperature</item>
+    </string-array>
 
 </resources>

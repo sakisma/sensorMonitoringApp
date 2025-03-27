@@ -10,4 +10,7 @@
     <color name="cardStrokeColor">#E0E0E0</color> <!-- Card border color -->
     <color name="tempIconColor">#FF5722</color> <!-- Temperature icon color -->
     <color name="moistureIconColor">#2196F3</color> <!-- Moisture icon color -->
+    <color name="screen_background">#F5F5F5</color>
+    <color name="card_stroke">#E0E0E0</color>
+    <color name="error_red">#D32F2F</color>
 </resources>
