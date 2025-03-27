@@ -1,231 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Dropdown for chart type selection -->
     <Spinner
-        android:id="@+id/spinnerChartType"
+        android:id="@+id/dateRangeSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/chart_type_options"/>
+        android:layout_marginBottom="8dp"/>
 
-    <!-- Date Range Filter -->
-    <LinearLayout
-        android:orientation="horizontal"
+    <Spinner
+        android:id="@+id/graphTypeSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center">
+        android:layout_marginBottom="8dp"/>
 
-        <Button
-            android:id="@+id/btnLast24Hours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Last 24 Hours" />
-
-        <Button
-            android:id="@+id/btnLast7Days"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Last 7 Days" />
-
-        <Button
-            android:id="@+id/btnLast30Days"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Last 30 Days" />
-
-        <Button
-            android:id="@+id/btnCustomRange"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Custom Range" />
-    </LinearLayout>
-
-    <!-- Chart View Area -->
-    <FrameLayout
-        android:id="@+id/chartContainer"
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
         android:layout_width="match_parent"
-        android:layout_height="250dp"/>
+        android:layout_height="250dp"
+        android:layout_marginTop="16dp"/>
 
-    <!-- Summary Panel for Min/Max/Average Values -->
-    <LinearLayout
-        android:orientation="horizontal"
+    <com.github.mikephil.charting.charts.ScatterChart
+        android:id="@+id/scatterChart"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvStatsSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center">
+        android:layout_marginTop="16dp"
+        android:textSize="14sp"
+        android:padding="8dp"
+        android:background="@android:color/darker_gray"/>
 
-        <TextView
-            android:id="@+id/textMinTemp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Min Temp: N/A" />
-
-        <TextView
-            android:id="@+id/textMaxTemp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Max Temp: N/A" />
-
-        <TextView
-            android:id="@+id/textAvgTemp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Avg Temp: N/A" />
-    </LinearLayout>
 </LinearLayout>
-
-
-
-    <!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent"-->
-<!--    android:orientation="vertical"-->
-<!--    android:padding="16dp">-->
-
-<!--    &lt;!&ndash; Date Selection Card &ndash;&gt;-->
-<!--    <com.google.android.material.card.MaterialCardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:cardCornerRadius="8dp"-->
-<!--        app:cardElevation="2dp"-->
-<!--        android:layout_marginBottom="8dp">-->
-
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:padding="8dp">-->
-
-<!--            <Spinner-->
-<!--                android:id="@+id/dateRangeSpinner"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:entries="@array/date_range_options"/>-->
-
-<!--            <com.google.android.material.button.MaterialButton-->
-<!--                android:id="@+id/btnCustomRange"-->
-<!--                style="@style/Widget.Material3.Button.OutlinedButton"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginStart="8dp"-->
-<!--                android:text="Custom"-->
-<!--                app:icon="@drawable/ic_calendar"/>-->
-<!--        </LinearLayout>-->
-<!--    </com.google.android.material.card.MaterialCardView>-->
-
-<!--    &lt;!&ndash; Aggregation Toggle Card &ndash;&gt;-->
-<!--    <com.google.android.material.card.MaterialCardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:cardCornerRadius="8dp"-->
-<!--        app:cardElevation="2dp"-->
-<!--        android:layout_marginBottom="8dp">-->
-
-<!--        <RadioGroup-->
-<!--            android:id="@+id/aggregation_group"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:padding="8dp">-->
-
-<!--            <RadioButton-->
-<!--                android:id="@+id/daily"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Daily"-->
-<!--                android:checked="true"/>-->
-
-<!--            <RadioButton-->
-<!--                android:id="@+id/hourly"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Hourly"/>-->
-
-<!--            <RadioButton-->
-<!--                android:id="@+id/raw_data"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_weight="1"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Raw"/>-->
-<!--        </RadioGroup>-->
-<!--    </com.google.android.material.card.MaterialCardView>-->
-
-<!--    &lt;!&ndash; Chart Container &ndash;&gt;-->
-<!--    <com.github.mikephil.charting.charts.LineChart-->
-<!--        android:id="@+id/line_chart"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="0dp"-->
-<!--        android:layout_weight="1"/>-->
-<!--    &lt;!&ndash; Loading Indicator &ndash;&gt;-->
-<!--    <ProgressBar-->
-<!--        android:id="@+id/progress_bar"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_gravity="center_horizontal"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        android:visibility="gone"/>-->
-
-<!--    &lt;!&ndash; Error Message &ndash;&gt;-->
-<!--    <TextView-->
-<!--        android:id="@+id/error_message"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        android:gravity="center"-->
-<!--        android:textColor="@color/error_red"-->
-<!--        android:visibility="gone"/>-->
-<!--</LinearLayout>-->
-
-<!--&lt;!&ndash;<?xml version="1.0" encoding="utf-8"?>&ndash;&gt;-->
-<!--&lt;!&ndash;<LinearLayout&ndash;&gt;-->
-<!--&lt;!&ndash;    xmlns:android="http://schemas.android.com/apk/res/android"&ndash;&gt;-->
-<!--&lt;!&ndash;    xmlns:app="http://schemas.android.com/apk/res-auto"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_height="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:orientation="vertical"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:padding="16dp">&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <com.google.android.material.card.MaterialCardView&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        app:cardCornerRadius="8dp"&ndash;&gt;-->
-<!--&lt;!&ndash;        app:cardElevation="4dp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_marginBottom="16dp">&ndash;&gt;-->
-
-<!--&lt;!&ndash;        <LinearLayout&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:orientation="horizontal"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:padding="8dp">&ndash;&gt;-->
-
-<!--&lt;!&ndash;            <Spinner&ndash;&gt;-->
-<!--&lt;!&ndash;                android:id="@+id/dateRangeSpinner"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_width="0dp"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_weight="1"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:entries="@array/date_range_options"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:spinnerMode="dropdown"/>&ndash;&gt;-->
-
-<!--&lt;!&ndash;            <com.google.android.material.button.MaterialButton&ndash;&gt;-->
-<!--&lt;!&ndash;                android:id="@+id/btnCustomRange"&ndash;&gt;-->
-<!--&lt;!&ndash;                style="@style/Widget.Material3.Button.OutlinedButton"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:layout_marginStart="8dp"&ndash;&gt;-->
-<!--&lt;!&ndash;                android:text="Custom Range"&ndash;&gt;-->
-<!--&lt;!&ndash;                app:icon="@drawable/ic_calendar" />&ndash;&gt;-->
-<!--&lt;!&ndash;        </LinearLayout>&ndash;&gt;-->
-<!--&lt;!&ndash;    </com.google.android.material.card.MaterialCardView>&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <com.github.mikephil.charting.charts.LineChart&ndash;&gt;-->
-<!--&lt;!&ndash;        android:id="@+id/line_chart"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="0dp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_weight="1"/>&ndash;&gt;-->
-<!--&lt;!&ndash;</LinearLayout>&ndash;&gt;-->
