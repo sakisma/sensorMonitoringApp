@@ -10,7 +10,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "SensorData.db";
@@ -118,6 +120,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
+    public List<DataPoint> getDataPoints(String startDate, String endDate) {
+        List<DataPoint> dataPoints = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT timestamp, temperature, moisture FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp ASC";
+        Cursor cursor = db.rawQuery(query, new String[]{startDate, endDate});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String timestamp = cursor.getString(0);
+                double temperature = cursor.getDouble(1);
+                int moisture = cursor.getInt(2);
+                dataPoints.add(new DataPoint(timestamp, temperature, moisture));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return dataPoints;
+    }
+
     @Override
     public synchronized void close() {
         super.close(); // Ensures all connections are released
@@ -126,5 +147,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getAllData() {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+    }
+
+    public static class DataPoint {
+        public String timestamp;
+        public double temperature;
+        public int moisture;
+
+        public DataPoint(String timestamp, double temperature, int moisture) {
+            this.timestamp = timestamp;
+            this.temperature = temperature;
+            this.moisture = moisture;
+        }
     }
 }
