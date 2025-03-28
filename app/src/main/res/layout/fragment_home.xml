@@ -1,297 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="@color/greenhouseBackground"
-    android:padding="24dp">
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/appTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Greenhouse Monitoring"
-        android:textSize="26sp"
-        android:textColor="@color/greenhousePrimaryText"
-        android:textStyle="bold"
-        android:paddingBottom="20dp"
-        android:gravity="center" />
-
-    <!-- Temperature Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/tempCard"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:strokeColor="@color/cardStrokeColor"
-        app:strokeWidth="1dp"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/cardBackground">
+        android:orientation="vertical">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/tempCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="16dp">
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/cardBackground"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:contentPadding="16dp"
+            app:strokeColor="@color/cardStrokeColor"
+            app:strokeWidth="1dp">
 
-            <!-- Icon -->
-            <ImageView
-                android:id="@+id/tempIcon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/baseline_thermostat_24"
-                app:tint="@color/tempIconColor" />
-
-            <!-- Title -->
-            <TextView
-                android:id="@+id/tempLabel"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Temperature"
-                android:textSize="18sp"
-                android:textColor="@color/greenhouseSecondaryText"
-                android:layout_marginTop="10dp" />
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Value -->
-            <TextView
-                android:id="@+id/tempValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="@color/greenhouseValueText"
-                android:layout_marginTop="5dp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <ImageView
+                    android:id="@+id/tempIcon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/baseline_thermostat_24"
+                    app:tint="@color/tempIconColor" />
 
-    <!-- Moisture Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/moistureCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:strokeColor="@color/cardStrokeColor"
-        app:strokeWidth="1dp"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@color/cardBackground">
+                <TextView
+                    android:id="@+id/tempLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Temperature"
+                    android:textColor="@color/greenhouseSecondaryText"
+                    android:textSize="20sp" />
 
-        <LinearLayout
+                <TextView
+                    android:id="@+id/tempValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/greenhouseValueText"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/moistureCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="16dp">
+            app:cardBackgroundColor="@color/cardBackground"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:contentPadding="16dp"
+            app:strokeColor="@color/cardStrokeColor"
+            app:strokeWidth="1dp">
 
-            <!-- Icon -->
-            <ImageView
-                android:id="@+id/moistureIcon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/baseline_water_drop_24"
-                app:tint="@color/moistureIconColor" />
-
-            <!-- Title -->
-            <TextView
-                android:id="@+id/moistureLabel"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Soil Moisture"
-                android:textSize="18sp"
-                android:textColor="@color/greenhouseSecondaryText"
-                android:layout_marginTop="10dp" />
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Value -->
-            <TextView
-                android:id="@+id/moistureValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="@color/greenhouseValueText"
-                android:layout_marginTop="5dp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <ImageView
+                    android:id="@+id/moistureIcon"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/baseline_water_drop_24"
+                    app:tint="@color/moistureIconColor" />
 
-</LinearLayout>
-<!--<?xml version="1.0" encoding="utf-8"?>-->
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent"-->
-<!--    android:orientation="vertical"-->
-<!--    android:gravity="center"-->
-<!--    android:background="@color/greenhouseBackground"-->
-<!--    android:padding="24dp">-->
+                <TextView
+                    android:id="@+id/moistureLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Soil Moisture"
+                    android:textColor="@color/greenhouseSecondaryText"
+                    android:textSize="20sp" />
 
-<!--    <TextView-->
-<!--        android:id="@+id/appTitle"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="Greenhouse Monitoring"-->
-<!--        android:textSize="26sp"-->
-<!--        android:textColor="@color/greenhousePrimaryText"-->
-<!--        android:textStyle="bold"-->
-<!--        android:paddingBottom="20dp"-->
-<!--        android:gravity="center" />-->
+                <TextView
+                    android:id="@+id/moistureValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/greenhouseValueText"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
 
-<!--    &lt;!&ndash; Temperature Card &ndash;&gt;-->
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginBottom="16dp"-->
-<!--        app:cardCornerRadius="8dp"-->
-<!--        app:cardElevation="4dp"-->
-<!--        app:background="@drawable/ripple_effect"-->
-<!--        app:cardBackgroundColor="@color/cardBackground">-->
+            </LinearLayout>
 
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:gravity="center_vertical"-->
-<!--            android:padding="16dp">-->
+        </com.google.android.material.card.MaterialCardView>
 
-<!--            <TextView-->
-<!--                android:id="@+id/tempLabel"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Temperature"-->
-<!--                android:textSize="18sp"-->
-<!--                android:textColor="@color/greenhouseSecondaryText"-->
-<!--                android:layout_weight="1" />-->
+    </LinearLayout>
 
-<!--            <TextView-->
-<!--                android:id="@+id/tempValue"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:textSize="18sp"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textColor="@color/greenhouseValueText"-->
-<!--                android:gravity="end" />-->
-<!--        </LinearLayout>-->
-<!--    </androidx.cardview.widget.CardView>-->
-
-<!--    &lt;!&ndash; Moisture Card &ndash;&gt;-->
-<!--    <androidx.cardview.widget.CardView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:cardCornerRadius="8dp"-->
-<!--        app:cardElevation="4dp"-->
-<!--        app:background="@drawable/ripple_effect"-->
-<!--        app:cardBackgroundColor="@color/cardBackground">-->
-
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:gravity="center_vertical"-->
-<!--            android:padding="16dp">-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/moistureLabel"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Soil Moisture"-->
-<!--                android:textSize="18sp"-->
-<!--                android:textColor="@color/greenhouseSecondaryText"-->
-<!--                android:layout_weight="1" />-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/moistureValue"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:textSize="18sp"-->
-<!--                android:textStyle="bold"-->
-<!--                android:textColor="@color/greenhouseValueText"-->
-<!--                android:gravity="end" />-->
-<!--        </LinearLayout>-->
-<!--    </androidx.cardview.widget.CardView>-->
-
-<!--</LinearLayout>-->
-
-<!--&lt;!&ndash;<?xml version="1.0" encoding="utf-8"?>&ndash;&gt;-->
-<!--&lt;!&ndash;<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_height="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:orientation="vertical"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:gravity="center"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:background="@color/greenhouseBackground"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:padding="24dp">&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <TextView&ndash;&gt;-->
-<!--&lt;!&ndash;        android:id="@+id/appTitle"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:text="Greenhouse Monitoring"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textSize="26sp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textColor="@color/greenhousePrimaryText"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textStyle="bold"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:paddingBottom="20dp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:gravity="center" />&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <LinearLayout&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:orientation="horizontal"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:gravity="center_vertical"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:padding="16dp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:background="@drawable/bordered_background">&ndash;&gt;-->
-
-
-<!--&lt;!&ndash;        <TextView&ndash;&gt;-->
-<!--&lt;!&ndash;            android:id="@+id/tempLabel"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:text="Temperature"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:textSize="18sp"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:textColor="@color/greenhouseSecondaryText"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_weight="1" />&ndash;&gt;-->
-
-<!--&lt;!&ndash;        <TextView&ndash;&gt;-->
-<!--&lt;!&ndash;            android:id="@+id/tempValue"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:textSize="18sp"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:textStyle="bold"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:textColor="@color/greenhouseValueText"&ndash;&gt;-->
-<!--&lt;!&ndash;            android:gravity="end" />&ndash;&gt;-->
-<!--&lt;!&ndash;    </LinearLayout>&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <View&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_height="16dp" />&ndash;&gt;-->
-
-<!--&lt;!&ndash;    <LinearLayout&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_width="match_parent"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:orientation="horizontal"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:gravity="center_vertical"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:padding="16dp"&ndash;&gt;-->
-<!--&lt;!&ndash;    android:background="@drawable/bordered_background">&ndash;&gt;-->
-
-<!--&lt;!&ndash;        <TextView&ndash;&gt;-->
-<!--&lt;!&ndash;        android:id="@+id/moistureLabel"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:text="Soil Moisture"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textSize="18sp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textColor="@color/greenhouseSecondaryText"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_weight="1" />&ndash;&gt;-->
-
-<!--&lt;!&ndash;        <TextView&ndash;&gt;-->
-<!--&lt;!&ndash;        android:id="@+id/moistureValue"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_width="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:layout_height="wrap_content"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textSize="18sp"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textStyle="bold"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:textColor="@color/greenhouseValueText"&ndash;&gt;-->
-<!--&lt;!&ndash;        android:gravity="end" />&ndash;&gt;-->
-<!--&lt;!&ndash;    </LinearLayout>&ndash;&gt;-->
-
-<!--&lt;!&ndash;</LinearLayout>&ndash;&gt;-->
+</ScrollView>
