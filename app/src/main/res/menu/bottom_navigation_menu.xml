@@ -4,6 +4,11 @@
         android:icon="@drawable/ic_home"
         android:title="Home" />
 
+
+    <item android:id="@+id/navigation_statistics"
+        android:icon="@drawable/baseline_dashboard_24"
+        android:title="Dashboard" />
+
     <item
         android:id="@+id/navigation_historical_data"
         android:icon="@drawable/ic_history"
