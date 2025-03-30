@@ -11,7 +11,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/greenhouseBackground"
         app:title="Greenhouse Monitoring"
-        app:titleTextColor="@color/greenhouseValueText" />
+        app:titleTextColor="@color/greenhousePrimaryText" />
 
     <FrameLayout
         android:id="@+id/content_frame"
