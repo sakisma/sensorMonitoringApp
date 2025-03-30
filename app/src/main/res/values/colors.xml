@@ -8,35 +8,14 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="greenhousePrimary">#2E7D32</color>
-    <color name="greenhouseSecondary">#66BB6A</color>
-    <color name="greenhouseBackground">#F0F4C3</color>
-    <color name="greenhouseAccent">#A5D6A7</color>
+    <color name="greenhousePrimary">#00563B</color>
+    <color name="greenhouseSecondary">#8FBC8F</color>
+    <color name="greenhouseBackground">#F5F5F5</color>
+    <color name="greenhouseAccent">#FFD700</color>
     <color name="greenhousePrimaryText">#212121</color>
     <color name="greenhouseSecondaryText">#757575</color>
     <color name="cardBackground">#E8F5E9</color>
-    <color name="cardStrokeColor">#81C784</color>
-    <color name="tempIconColor">#4CAF50</color>
-    <color name="moistureIconColor">#8BC34A</color>
+    <color name="cardStrokeColor">#66BB6A</color>
+    <color name="tempIconColor">#FFB300</color>
+    <color name="moistureIconColor">#81D4FA</color>
 </resources>
-
-<!--<?xml version="1.0" encoding="utf-8"?>-->
-<!--<resources>-->
-<!--    &lt;!&ndash; Colors for the app &ndash;&gt;-->
-<!--    <color name="greenhouseBackground">#E8F5E9</color> &lt;!&ndash; Light green background &ndash;&gt;-->
-<!--    <color name="greenhousePrimaryText">#2E7D32</color> &lt;!&ndash; Dark green for titles &ndash;&gt;-->
-<!--    <color name="greenhouseSecondaryText">#558B2F</color> &lt;!&ndash; Green for labels &ndash;&gt;-->
-<!--    <color name="greenhouseValueText">#1B5E20</color> &lt;!&ndash; Bold dark green for values &ndash;&gt;-->
-<!--    <color name="borderColor">#AED581</color> &lt;!&ndash; Border around sections &ndash;&gt;-->
-<!--    <color name="cardBackground">#FFFFFF</color> &lt;!&ndash; White background for cards &ndash;&gt;-->
-<!--    <color name="cardStrokeColor">#E0E0E0</color> &lt;!&ndash; Card border color &ndash;&gt;-->
-<!--    <color name="tempIconColor">#FF5722</color> &lt;!&ndash; Temperature icon color &ndash;&gt;-->
-<!--    <color name="moistureIconColor">#2196F3</color> &lt;!&ndash; Moisture icon color &ndash;&gt;-->
-<!--    <color name="screen_background">#F5F5F5</color>-->
-<!--    <color name="card_stroke">#E0E0E0</color>-->
-<!--    <color name="error_red">#D32F2F</color>-->
-<!--    <color name="white">#FFFFFF</color>-->
-<!--    <color name="teal_200">#80CBC4</color>-->
-<!--    <color name="teal_700">#00796B</color>-->
-<!--    <color name="black">#000000</color>-->
-<!--</resources>-->
