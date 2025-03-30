@@ -21,60 +21,6 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tempThresholdInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Temperature Threshold (°C)">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/tempThresholdEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/moistureThresholdInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Moisture Threshold (%)">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/moistureThresholdEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/saveThresholdsButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Save"
-                    android:enabled="false"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="16dp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             app:cardElevation="4dp"
             app:cardCornerRadius="8dp">
 
@@ -89,6 +35,90 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Enable Notifications" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/maxTempThresholdInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Max Temperature Threshold (°C)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/maxTempThresholdEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/maxMoistureThresholdInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Max Moisture Threshold (%)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/maxMoistureThresholdEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/minTempThresholdInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Min Temperature Threshold (°C)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/minTempThresholdEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/minMoistureThresholdInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Min Moisture Threshold (%)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/minMoistureThresholdEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/saveThresholdsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Save"
+                    android:enabled="false"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="16dp" />
 
             </LinearLayout>
 

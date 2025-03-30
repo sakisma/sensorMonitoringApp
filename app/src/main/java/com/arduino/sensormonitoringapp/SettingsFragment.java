@@ -23,7 +23,9 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class SettingsFragment extends Fragment {
 
-    private EditText tempThresholdEditText, moistureThresholdEditText;
+    //private EditText tempThresholdEditText, moistureThresholdEditText;
+    private EditText maxTempThresholdEditText, minTempThresholdEditText;
+    private EditText maxMoistureThresholdEditText, minMoistureThresholdEditText;
     private SwitchMaterial notificationsSwitch;
     private SharedPreferences sharedPreferences;
     private DatabaseReference userSettingsRef;
@@ -31,12 +33,17 @@ public class SettingsFragment extends Fragment {
     private boolean thresholdsChanged = false;
 
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        tempThresholdEditText = view.findViewById(R.id.tempThresholdEditText);
-        moistureThresholdEditText = view.findViewById(R.id.moistureThresholdEditText);
+        //tempThresholdEditText = view.findViewById(R.id.tempThresholdEditText);
+        //moistureThresholdEditText = view.findViewById(R.id.moistureThresholdEditText);
+        maxTempThresholdEditText = view.findViewById(R.id.maxTempThresholdEditText);
+        minTempThresholdEditText = view.findViewById(R.id.minTempThresholdEditText);
+        maxMoistureThresholdEditText = view.findViewById(R.id.maxMoistureThresholdEditText);
+        minMoistureThresholdEditText = view.findViewById(R.id.minMoistureThresholdEditText);
         notificationsSwitch = view.findViewById(R.id.notificationsSwitch);
         saveThresholdsButton = view.findViewById(R.id.saveThresholdsButton);
 
@@ -47,8 +54,12 @@ public class SettingsFragment extends Fragment {
 
         notificationsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> saveSettings());
 
-        tempThresholdEditText.addTextChangedListener(thresholdTextWatcher);
-        moistureThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        //tempThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        //moistureThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        maxTempThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        minTempThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        maxMoistureThresholdEditText.addTextChangedListener(thresholdTextWatcher);
+        minMoistureThresholdEditText.addTextChangedListener(thresholdTextWatcher);
 
         saveThresholdsButton.setOnClickListener(v -> saveThresholds());
 
@@ -56,6 +67,8 @@ public class SettingsFragment extends Fragment {
         sendDefaultValuesToFirebaseIfNeeded();
 
         return view;
+
+
     }
 
     private void sendDefaultValuesToFirebaseIfNeeded() {
@@ -64,9 +77,13 @@ public class SettingsFragment extends Fragment {
 
         if (firstLaunch) {
             // Send default values to Firebase
-            userSettingsRef.child("tempThreshold").setValue(30.0f);
-            userSettingsRef.child("moistureThreshold").setValue(70.0f);
+            //userSettingsRef.child("tempThreshold").setValue(30.0f);
+            //userSettingsRef.child("moistureThreshold").setValue(70.0f);
             userSettingsRef.child("notificationsEnabled").setValue(true);
+            userSettingsRef.child("maxTempThreshold").setValue(30.0f);
+            userSettingsRef.child("maxMoistureThreshold").setValue(100.0f);
+            userSettingsRef.child("minTempThreshold").setValue(10.0f);
+            userSettingsRef.child("minMoistureThreshold").setValue(50.0f);
 
             // Update firstLaunch flag
             SharedPreferences.Editor editor = prefs.edit();
@@ -78,8 +95,13 @@ public class SettingsFragment extends Fragment {
 
     private void loadSettings() {
         notificationsSwitch.setChecked(sharedPreferences.getBoolean("notificationsEnabled", true));
-        tempThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("tempThreshold", 30.0f)));
-        moistureThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("moistureThreshold", 70.0f)));
+        //tempThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("tempThreshold", 30.0f)));
+        //moistureThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("moistureThreshold", 70.0f)));
+        maxTempThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("maxTempThreshold", 30.0f)));
+        minTempThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("minTempThreshold", 10.0f)));
+        maxMoistureThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("maxMoistureThreshold", 100.0f)));
+        minMoistureThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("minMoistureThreshold", 50.0f)));
+
     }
 
     private TextWatcher thresholdTextWatcher = new TextWatcher() {
@@ -109,17 +131,29 @@ public class SettingsFragment extends Fragment {
 
     private void saveThresholds() {
         try {
-            float tempThreshold = Float.parseFloat(tempThresholdEditText.getText().toString());
-            float moistureThreshold = Float.parseFloat(moistureThresholdEditText.getText().toString());
+            //float tempThreshold = Float.parseFloat(tempThresholdEditText.getText().toString());
+            //float moistureThreshold = Float.parseFloat(moistureThresholdEditText.getText().toString());
+            float maxTempThreshold = Float.parseFloat(maxTempThresholdEditText.getText().toString());
+            float minTempThreshold = Float.parseFloat(minTempThresholdEditText.getText().toString());
+            float maxMoistureThreshold = Float.parseFloat(maxMoistureThresholdEditText.getText().toString());
+            float minMoistureThreshold = Float.parseFloat(minMoistureThresholdEditText.getText().toString());
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putFloat("tempThreshold", tempThreshold);
-            editor.putFloat("moistureThreshold", moistureThreshold);
+            //editor.putFloat("tempThreshold", tempThreshold);
+            //editor.putFloat("moistureThreshold", moistureThreshold);
+            editor.putFloat("maxTempThreshold", maxTempThreshold);
+            editor.putFloat("minTempThreshold", minTempThreshold);
+            editor.putFloat("maxMoistureThreshold", maxMoistureThreshold);
+            editor.putFloat("minMoistureThreshold", minMoistureThreshold);
             editor.apply();
 
             // Save to Firebase
-            userSettingsRef.child("tempThreshold").setValue(tempThreshold);
-            userSettingsRef.child("moistureThreshold").setValue(moistureThreshold);
+            //userSettingsRef.child("tempThreshold").setValue(tempThreshold);
+            //userSettingsRef.child("moistureThreshold").setValue(moistureThreshold);
+            userSettingsRef.child("maxTempThreshold").setValue(maxTempThreshold);
+            userSettingsRef.child("minTempThreshold").setValue(minTempThreshold);
+            userSettingsRef.child("maxMoistureThreshold").setValue(maxMoistureThreshold);
+            userSettingsRef.child("minMoistureThreshold").setValue(minMoistureThreshold);
 
             Toast.makeText(getContext(), "Thresholds saved", Toast.LENGTH_SHORT).show();
             thresholdsChanged = false;
