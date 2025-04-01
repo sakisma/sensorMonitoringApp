@@ -1,14 +1,11 @@
 package com.arduino.sensormonitoringapp;
 
-import android.app.AlertDialog;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.NumberPicker;
-import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,18 +15,11 @@ import com.anychart.AnyChart;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.HeatDataEntry;
-import com.anychart.charts.Cartesian;
 import com.anychart.charts.HeatMap;
-import com.anychart.enums.ScaleTypes;
-import com.anychart.enums.SelectionMode;
-import com.anychart.graphics.vector.SolidFill;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,6 +38,13 @@ public class HeatmapFragment extends Fragment {
     private int selectedYear = Calendar.getInstance().get(Calendar.YEAR);
     private boolean showTemperature = true;
     private MaterialButton yearButton;
+
+    // Track actual min/max values for legend
+    private double actualMinValue = 0;
+    private double actualMaxValue = 30;
+
+    // Scale factor to maintain precision when storing double as int
+    private static final int VALUE_SCALE = 100;
 
 
     @Override
@@ -68,7 +65,7 @@ public class HeatmapFragment extends Fragment {
         setupHeatmap();
         anyChartView.setChart(heatMap);
 
-        MaterialButton yearButton = view.findViewById(R.id.year_button);
+        yearButton = view.findViewById(R.id.year_button);
         yearButton.setText(String.valueOf(selectedYear));
         yearButton.setOnClickListener(v -> showYearPicker());
 
@@ -146,16 +143,17 @@ public class HeatmapFragment extends Fragment {
                         "var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; " +
                         "return months[this.value]; }");
 
-        // Configure grid
+        // Configure cell labels to show actual values (with scaling conversion)
         heatMap.labels()
                 .enabled(true)
                 .minFontSize(8)
-                .format("function() { return (this.heat / " + CustomHeatDataEntry.VALUE_SCALE + ").toFixed(1); }");
+                .format("function() {" +
+                        "  if (this.heat === 0) return '';" + // Don't show values for empty cells
+                        "  return (this.heat / " + VALUE_SCALE + ").toFixed(1);" + // Convert back to actual value
+                        "}");
 
-        // Color scale for temperature (blue to red)
+        // Default color scales (will be updated in updateHeatmap)
         String[] tempColors = {"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"};
-
-        // Color scale for moisture (light to dark blue)
         String[] moistureColors = {"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"};
 
         // Set color scale
@@ -170,7 +168,7 @@ public class HeatmapFragment extends Fragment {
                         "return '<b>' + months[this.y] + ' ' + this.x + '</b>';}")
                 .format("function() {" +
                         "return '<span style=\"color:#CECECE\">Value: </span>' + " +
-                        "(this.heat / " + CustomHeatDataEntry.VALUE_SCALE + ").toFixed(2) + " +  // Divide by scale factor
+                        "(this.heat / " + VALUE_SCALE + ").toFixed(2) + " +  // Divide by scale factor
                         "'<span style=\"color:#CECECE\">" + (showTemperature ? "°C" : "%") + "</span>';}");
 
         // Enable legend
@@ -190,8 +188,9 @@ public class HeatmapFragment extends Fragment {
 
         // Create a map to store values for each day/month combination
         Map<String, Double> dataMap = new HashMap<>();
-        double minValue = Double.MAX_VALUE;
-        double maxValue = Double.MIN_VALUE;
+        // Reset min/max values
+        actualMinValue = Double.MAX_VALUE;
+        actualMaxValue = Double.MIN_VALUE;
 
         // Process data from the database
         if (cursor != null && cursor.moveToFirst()) {
@@ -222,8 +221,8 @@ public class HeatmapFragment extends Fragment {
                     }
 
                     // Track min/max values
-                    if (value < minValue) minValue = value;
-                    if (value > maxValue) maxValue = value;
+                    if (value < actualMinValue) actualMinValue = value;
+                    if (value > actualMaxValue) actualMaxValue = value;
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -233,9 +232,9 @@ public class HeatmapFragment extends Fragment {
         }
 
         // Set reasonable defaults if no data
-        if (minValue == Double.MAX_VALUE) {
-            minValue = showTemperature ? 0 : 0;
-            maxValue = showTemperature ? 30 : 100;
+        if (actualMinValue == Double.MAX_VALUE) {
+            actualMinValue = showTemperature ? 0 : 0;
+            actualMinValue = showTemperature ? 30 : 100;
         }
 
         // Create entries for all possible day/month combinations
@@ -257,30 +256,34 @@ public class HeatmapFragment extends Fragment {
 
                 if (value != null) {
                     // Normalize value to 0-100 for display
-                    double normalizedValue = ((value - minValue) / (maxValue - minValue)) * 100;
+//                    double normalizedValue = ((value - minValue) / (maxValue - minValue)) * 100;
 
                     data.add(new CustomHeatDataEntry(
                             String.valueOf(day),
                             String.valueOf(month),
-                            normalizedValue,
-                            getColorForValue(normalizedValue/100, showTemperature)
+                            value,
+                            getColorForValue((value - actualMinValue) / (actualMaxValue - actualMinValue), showTemperature)
                     ));
                 } else {
                     // Add empty cell (transparent or very light color)
                     data.add(new CustomHeatDataEntry(
                             String.valueOf(day),
                             String.valueOf(month),
-                            0,
-                            showTemperature ? "#F5F5F5" : "#F5F5F5"
+                            0.0,
+                            "#F5F5F5"
                     ));
                 }
             }
         }
 
+        // Update chart title with correct range information
+        String title = showTemperature ?
+                String.format("Temperature in %d (%.1f°C - %.1f°C)", selectedYear, actualMinValue, actualMaxValue) :
+                String.format("Soil Moisture in %d (%.1f%% - %.1f%%)", selectedYear, actualMinValue, actualMaxValue);
+
+
         // Update chart
-        heatMap.title().text(showTemperature ?
-                "Temperature in " + selectedYear + " (°C)" :
-                "Soil Moisture in " + selectedYear + " (%)");
+        heatMap.title().text(title);
 
         // Update color scale
         heatMap.colorScale()
@@ -288,15 +291,24 @@ public class HeatmapFragment extends Fragment {
                         new String[]{"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"} :
                         new String[]{"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"});
 
-        // Add a legend
+        // Configure legend with proper min/max values
         heatMap.legend()
                 .enabled(true)
+                .itemsFormat("function() {" +
+                        "var range = " + (actualMaxValue - actualMinValue) + ";" +
+                        "var min = " + actualMinValue + ";" +
+                        "var step = range / 7;" + // 8 colors means 7 steps
+                        "var value = min + step * this.index;" +
+                        "return value.toFixed(1) + ('" + (showTemperature ? "°C" : "%") + "');" +
+                        "}")
                 .title(showTemperature ? "Temperature (°C)" : "Moisture (%)");
 
         heatMap.data(data);
     }
 
     private String getColorForValue(double normalizedValue, boolean isTemperature) {
+        if (normalizedValue <= 0) return "#F5F5F5";
+
         if (isTemperature) {
             if (normalizedValue < 0.125) return "#90caf9";
             else if (normalizedValue < 0.25) return "#42a5f5";
@@ -319,10 +331,9 @@ public class HeatmapFragment extends Fragment {
     }
 
     private static class CustomHeatDataEntry extends HeatDataEntry {
-        // Scale factor to maintain precision when converting to integer
-        private static final int VALUE_SCALE = 1000;
         CustomHeatDataEntry(String dayOfMonth, String month, double value, String fill) {
-            super(dayOfMonth, month, (int)(value * VALUE_SCALE));
+            // Scale the double value to integer for the HeatDataEntry constructor
+            super(dayOfMonth, month, value == 0 ? 0 : (int)(value * VALUE_SCALE));
             setValue("fill", fill);
         }
     }
