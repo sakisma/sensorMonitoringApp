@@ -74,6 +74,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation(libs.cardview)
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.github.AnyChart:AnyChart-Android:1.1.5")
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)

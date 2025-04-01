@@ -1,41 +1,29 @@
 package com.arduino.sensormonitoringapp;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.os.Build;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.GridLayout;
+import android.widget.NumberPicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.gson.Gson;
+import com.anychart.AnyChart;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.HeatDataEntry;
+import com.anychart.charts.HeatMap;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-import org.json.JSONObject;
-
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,323 +32,315 @@ import java.util.Map;
 
 public class HeatmapFragment extends Fragment {
 
-//    private HeatMapView heatMapView;
+    private AnyChartView anyChartView;
+    private HeatMap heatMap;
+    private DatabaseHelper databaseHelper;
+    private int selectedYear = Calendar.getInstance().get(Calendar.YEAR);
+    private boolean showTemperature = true;
+    private MaterialButton yearButton;
 
-    private WebView webView;
-    private FirebaseDatabase database;
-    private DatabaseReference sensorDataRef;
+    // Track actual min/max values for legend
+    private double actualMinValue = 0;
+    private double actualMaxValue = 30;
 
-    @Nullable
+    // Scale factor to maintain precision when storing double as int
+    private static final int VALUE_SCALE = 100;
+
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_heatmap, container, false);
-
-        webView = view.findViewById(R.id.webview);
-        webView.getSettings().setJavaScriptEnabled(true);
-//        webView.addJavascriptInterface(new WebAppInterface(getContext()), "android");
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Log.d("HeatmapFragment", "Page finished loading: " + url);
-                fetchHeatmapData();
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Log.e("HeatmapFragment", "Error loading page: " + error.getDescription());
-                }
-            }
-        });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
-
-        webView.loadUrl("file:///android_asset/heatmap.html");
-        database = FirebaseDatabase.getInstance();
-        sensorDataRef = database.getReference("sensorData");
-
-        return view;
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_heatmap, container, false);
     }
 
-    private void fetchHeatmapData() {
-        sensorDataRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<Map<String, Object>> heatmapData = new ArrayList<>();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-                for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-                    String date = dateSnapshot.getKey(); // Get the date (e.g., "2024-09-26")
-                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-                        String time = timeSnapshot.getKey(); // Get the time (e.g., "01:38:03")
+        databaseHelper = new DatabaseHelper(requireContext());
+        anyChartView = view.findViewById(R.id.any_chart_view);
+        anyChartView.setProgressBar(view.findViewById(R.id.progress_bar));
 
-                        String[] parts = date.split("-");
-                        int year = Integer.parseInt(parts[0]);
-                        int month = Integer.parseInt(parts[1]);
-                        int day = Integer.parseInt(parts[2]);
+        // Initialize chart
+        heatMap = AnyChart.heatMap();
+        setupHeatmap();
+        anyChartView.setChart(heatMap);
 
-                        // Combine date and time to create a timestamp
-                        String timestamp = date + "T" + time + ".000Z";
+        yearButton = view.findViewById(R.id.year_button);
+        yearButton.setText(String.valueOf(selectedYear));
+        yearButton.setOnClickListener(v -> showYearPicker());
 
-                        // Fetch temperature value
-                        Object tempObject = timeSnapshot.child("temp").getValue();
-                        if (tempObject != null) {
-                            float temperature = Float.parseFloat(tempObject.toString());
-                            // Create month/year format for y-axis
-                            String formattedMonthYear = month + "/" + year;
+        // Metric selection
+        ChipGroup metricChipGroup = view.findViewById(R.id.metric_chip_group);
+        metricChipGroup.setSingleSelection(true); // Ensure only one chip can be selected
 
-                            // Add data to the list
-                            Map<String, Object> dataPoint = new HashMap<>();
-                            dataPoint.put("date", timestamp);
-                            dataPoint.put("monthYear", formattedMonthYear);
-                            dataPoint.put("temperature", temperature);
-                            heatmapData.add(dataPoint);
-                        }
+        Chip temperatureChip = view.findViewById(R.id.chip_temperature);
+        Chip moistureChip = view.findViewById(R.id.chip_moisture);
+
+        // Set initial state
+        temperatureChip.setChecked(true);
+        moistureChip.setChecked(false);
+        showTemperature = true;
+
+        metricChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.chip_temperature) {
+                showTemperature = true;
+            } else if (checkedId == R.id.chip_moisture) {
+                showTemperature = false;
+            }
+            updateHeatmap();
+        });
+
+        // Initial load
+        updateHeatmap();
+    }
+
+    private void showYearPicker() {
+        // Create a NumberPicker dialog for years
+        final View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.year_picker_dialog, null);
+        final NumberPicker yearPicker = dialogView.findViewById(R.id.year_picker);
+
+        // Set range - from 5 years ago to current year
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        yearPicker.setMinValue(currentYear - 5);
+        yearPicker.setMaxValue(currentYear);
+        yearPicker.setValue(selectedYear);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Year")
+                .setView(dialogView)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    selectedYear = yearPicker.getValue();
+                    yearButton.setText(String.valueOf(selectedYear));
+                    updateHeatmap();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void setupHeatmap() {
+        heatMap.stroke("1 #fff");
+
+        // Create labels for all days (1-31)
+        String[] daysLabels = new String[31];
+        for (int i = 0; i < 31; i++) {
+            daysLabels[i] = String.valueOf(i + 1);
+        }
+
+        // Create labels for all months
+        String[] monthLabels = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+        // Set X-axis labels (days 1-31)
+        heatMap.xAxis(0)
+                .title("Day of Month")
+                .labels()
+                .format("function() { return this.value; }");
+
+        // Set Y-axis labels (months)
+        heatMap.yAxis(0)
+                .title("Month")
+                .labels()
+                .format("function() { " +
+                        "var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; " +
+                        "return months[this.value]; }");
+
+        // Configure cell labels to show actual values (with scaling conversion)
+        heatMap.labels()
+                .enabled(true)
+                .minFontSize(8)
+                .format("function() {" +
+                        "  if (this.heat === 0) return '';" + // Don't show values for empty cells
+                        "  return (this.heat / " + VALUE_SCALE + ").toFixed(1);" + // Convert back to actual value
+                        "}");
+
+        // Default color scales (will be updated in updateHeatmap)
+        String[] tempColors = {"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"};
+        String[] moistureColors = {"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"};
+
+        // Set color scale
+        heatMap.colorScale()
+                .colors(showTemperature ? tempColors : moistureColors);
+
+        // Tooltip
+        heatMap.tooltip()
+                .useHtml(true)
+                .titleFormat("function() {" +
+                        "var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];" +
+                        "return '<b>' + months[this.y] + ' ' + this.x + '</b>';}")
+                .format("function() {" +
+                        "return '<span style=\"color:#CECECE\">Value: </span>' + " +
+                        "(this.heat / " + VALUE_SCALE + ").toFixed(2) + " +  // Divide by scale factor
+                        "'<span style=\"color:#CECECE\">" + (showTemperature ? "°C" : "%") + "</span>';}");
+
+        // Enable legend
+        heatMap.legend().enabled(true);
+
+        // Enable scroller and set point to 7 days initially.
+        heatMap.xScroller().enabled(true);
+        heatMap.xZoom().setToPointsCount(7, false, null);
+
+    }
+
+    private void updateHeatmap() {
+        List<DataEntry> data = new ArrayList<>();
+
+        // Get data for the year
+        Cursor cursor = databaseHelper.getYearlyData(selectedYear);
+
+        // Create a map to store values for each day/month combination
+        Map<String, Double> dataMap = new HashMap<>();
+        // Reset min/max values
+        actualMinValue = Double.MAX_VALUE;
+        actualMaxValue = Double.MIN_VALUE;
+
+        // Process data from the database
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TIMESTAMP));
+                double value = showTemperature ?
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TEMPERATURE)) :
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MOISTURE));
+
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date date = sdf.parse(timestamp.split(" ")[0]);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+
+                    int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+                    int month = cal.get(Calendar.MONTH);
+
+                    // Create a key for this day/month combination
+                    String key = month + ":" + dayOfMonth;
+
+                    // Add or update value in map (for averaging if multiple values exist for same day)
+                    if (dataMap.containsKey(key)) {
+                        double existingValue = dataMap.get(key);
+                        dataMap.put(key, (existingValue + value) / 2); // Simple average
+                    } else {
+                        dataMap.put(key, value);
                     }
+
+                    // Track min/max values
+                    if (value < actualMinValue) actualMinValue = value;
+                    if (value > actualMaxValue) actualMaxValue = value;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
 
-                // Convert the data to JSON and pass it to JavaScript
-                String jsonData = new Gson().toJson(heatmapData);
-                Log.d("HeatmapFragment", "JSON Data: " + jsonData);
-                webView.evaluateJavascript("updateHeatmapData(" + JSONObject.quote(jsonData) + ");", null);
+        // Set reasonable defaults if no data
+        if (actualMinValue == Double.MAX_VALUE) {
+            actualMinValue = showTemperature ? 0 : 0;
+            actualMinValue = showTemperature ? 30 : 100;
+        }
+
+        // Create entries for all possible day/month combinations
+        for (int month = 0; month < 12; month++) {
+            // Get days in month (considering leap years for February)
+            int daysInMonth = 31;
+            if (month == 1) { // February
+                boolean isLeapYear = (selectedYear % 4 == 0 && selectedYear % 100 != 0) || (selectedYear % 400 == 0);
+                daysInMonth = isLeapYear ? 29 : 28;
+            } else if (month == 3 || month == 5 || month == 8 || month == 10) { // April, June, September, November
+                daysInMonth = 30;
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error
-                Log.e("HeatmapFragment", "Database error: " + error.getMessage());
+            for (int day = 1; day <= daysInMonth; day++) {
+                String key = month + ":" + day;
+
+                // Get value from map or use null for empty cells
+                Double value = dataMap.get(key);
+
+                if (value != null) {
+                    // Normalize value to 0-100 for display
+//                    double normalizedValue = ((value - minValue) / (maxValue - minValue)) * 100;
+
+                    data.add(new CustomHeatDataEntry(
+                            String.valueOf(day),
+                            String.valueOf(month),
+                            value,
+                            getColorForValue((value - actualMinValue) / (actualMaxValue - actualMinValue), showTemperature)
+                    ));
+                } else {
+                    // Add empty cell (transparent or very light color)
+                    data.add(new CustomHeatDataEntry(
+                            String.valueOf(day),
+                            String.valueOf(month),
+                            0.0,
+                            "#F5F5F5"
+                    ));
+                }
             }
-        });
+        }
+
+        // Update chart title with correct range information
+        String title = showTemperature ?
+                String.format("Temperature in %d (%.1f°C - %.1f°C)", selectedYear, actualMinValue, actualMaxValue) :
+                String.format("Soil Moisture in %d (%.1f%% - %.1f%%)", selectedYear, actualMinValue, actualMaxValue);
+
+
+        // Update chart
+        heatMap.title().text(title);
+
+        // Update color scale
+        heatMap.colorScale()
+                .colors(showTemperature ?
+                        new String[]{"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"} :
+                        new String[]{"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"});
+
+        // Configure legend with proper min/max values
+        heatMap.legend()
+                .enabled(true)
+                .itemsFormat("function() {" +
+                        "var range = " + (actualMaxValue - actualMinValue) + ";" +
+                        "var min = " + actualMinValue + ";" +
+                        "var step = range / 7;" + // 8 colors means 7 steps
+                        "var value = min + step * this.index;" +
+                        "return value.toFixed(1) + ('" + (showTemperature ? "°C" : "%") + "');" +
+                        "}")
+                .title(showTemperature ? "Temperature (°C)" : "Moisture (%)");
+
+        heatMap.data(data);
     }
 
-    public class WebAppInterface {
-        Context context;
+    private String getColorForValue(double normalizedValue, boolean isTemperature) {
+        if (normalizedValue <= 0) return "#F5F5F5";
 
-        WebAppInterface(Context context) {
-            this.context = context;
+        if (isTemperature) {
+            if (normalizedValue < 0.125) return "#90caf9";
+            else if (normalizedValue < 0.25) return "#42a5f5";
+            else if (normalizedValue < 0.375) return "#1e88e5";
+            else if (normalizedValue < 0.5) return "#0d47a1";
+            else if (normalizedValue < 0.625) return "#ffb74d";
+            else if (normalizedValue < 0.75) return "#ff9800";
+            else if (normalizedValue < 0.875) return "#ef6c00";
+            else return "#e65100";
+        } else {
+            if (normalizedValue < 0.125) return "#d7ccc8";
+            else if (normalizedValue < 0.25) return "#bcaaa4";
+            else if (normalizedValue < 0.375) return "#a1887f";
+            else if (normalizedValue < 0.5) return "#8d6e63";
+            else if (normalizedValue < 0.625) return "#795548";
+            else if (normalizedValue < 0.75) return "#6d4c41";
+            else if (normalizedValue < 0.875) return "#5d4037";
+            else return "#4e342e";
         }
+    }
 
-        @JavascriptInterface
-        public String getHeatmapData() {
-            // This method can be called from JavaScript if needed
-            return "[]"; // Return empty data by default
+    private static class CustomHeatDataEntry extends HeatDataEntry {
+        CustomHeatDataEntry(String dayOfMonth, String month, double value, String fill) {
+            // Scale the double value to integer for the HeatDataEntry constructor
+            super(dayOfMonth, month, value == 0 ? 0 : (int)(value * VALUE_SCALE));
+            setValue("fill", fill);
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        databaseHelper.close();
+        super.onDestroyView();
     }
 }
-
-    //    @Nullable
-//    @Override
-//    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-//        View view = inflater.inflate(R.layout.fragment_heatmap, container, false);
-//
-//        heatMapView = view.findViewById(R.id.heatmap_view);
-//        database = FirebaseDatabase.getInstance();
-//        sensorDataRef = database.getReference("sensorData");
-//
-//        fetchHeatmapData();
-//
-//        return view;
-//    }
-//
-//    private void fetchHeatmapData() {
-//        sensorDataRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                Map<Long, List<Float>> heatmapData = new HashMap<>();
-//
-//                for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-//                    String date = dateSnapshot.getKey(); // Get the date (e.g., "2024-09-26")
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        String time = timeSnapshot.getKey(); // Get the time (e.g., "01:38:03")
-//
-//                        // Combine date and time to create a timestamp
-//                        String timestampString = date + " " + time;
-//                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-//                        try {
-//                            Date timestampDate = dateFormat.parse(timestampString);
-//                            if (timestampDate != null) {
-//                                long timestamp = timestampDate.getTime(); // Get the timestamp in milliseconds
-//
-//                                Object tempObject = timeSnapshot.child("temp").getValue();
-//                                if (tempObject != null) {
-//                                    float tempValue = Float.parseFloat(tempObject.toString());
-//
-//                                    // Add the temperature value to the corresponding timestamp
-//                                    if (!heatmapData.containsKey(timestamp)) {
-//                                        heatmapData.put(timestamp, new ArrayList<>());
-//                                    }
-//                                    heatmapData.get(timestamp).add(tempValue);
-//                                }
-//                            }
-//                        } catch (ParseException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//
-//                heatMapView.setHeatmapData(heatmapData);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
-//    }
-
-//    private void fetchHeatmapData() {
-//        sensorDataRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                List<Float> temperatureValue = new ArrayList<>();
-//
-//                for (DataSnapshot dateSnapshot : snapshot.getChildren()) {
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        Object tempObject = timeSnapshot.child("temp").getValue();
-//                        if (tempObject != null) {
-//                            float tempValue = Float.parseFloat(tempObject.toString());
-//                            temperatureValue.add(tempValue);
-//                        }
-//                    }
-//                }
-//
-//                heatMapView.setTemperatureValues(temperatureValue);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//
-//            }
-//        });
-//    }
-
-
-
-    //    @Nullable
-//    @Override
-//    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-//        View view = inflater.inflate(R.layout.fragment_heatmap, container, false);
-//
-//        heatmapGrid = view.findViewById(R.id.heatmap_grid);
-//        database = FirebaseDatabase.getInstance();
-//        sensorDataRef = database.getReference("sensorData");
-//
-//        fetchHeatmapData();
-//
-//        return view;
-//    }
-
-//    private void fetchHeatmapData() {
-//        sensorDataRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                List<Float> temperatureValues = new ArrayList<>();
-//
-//                // Λήψη του ορίου θερμοκρασίας από τις Ρυθμίσεις
-//                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-//                float temperatureThreshold = Float.parseFloat(sharedPreferences.getString("temperature_threshold", "30"));
-//
-//                boolean thresholdExceeded = false;
-//
-//                for (DataSnapshot dateSnapshot : dataSnapshot.getChildren()) {
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        Object tempObject = timeSnapshot.child("temp").getValue();
-//                        if (tempObject != null) {
-//                            float tempValue = Float.parseFloat(tempObject.toString());
-//                            temperatureValues.add(tempValue);
-//
-//                            // Έλεγχος αν ξεπερνά το όριο θερμοκρασίας
-//                            if (tempValue > temperatureThreshold) {
-//                                thresholdExceeded = true;
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                // Αν ξεπεραστεί το όριο, στείλε ειδοποίηση
-//                if (thresholdExceeded) {
-//                    sendNotification("Temperature Alert", "A temperature has exceeded " + temperatureThreshold + "°C!");
-//                }
-//
-//                populateHeatmap(temperatureValues);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                // Διαχείριση σφαλμάτων
-//            }
-//        });
-//    }
-
-//    private void populateHeatmap(List<Float> temperatureValues) {
-//        heatmapGrid.removeAllViews();
-//
-//        int totalCells = heatmapGrid.getColumnCount() * heatmapGrid.getRowCount();
-//
-//        for (int i = 0; i < totalCells && i < temperatureValues.size(); i++) {
-//            View cell = new View(getContext());
-//
-//            float temperature = temperatureValues.get(i);
-//            cell.setBackgroundColor(getColorForTemperature(temperature));
-//
-//            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-//            params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-//            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-//            params.width = 0;
-//            params.height = 0;
-//            params.setMargins(4, 4, 4, 4);
-//            cell.setLayoutParams(params);
-//
-//            heatmapGrid.addView(cell);
-//        }
-//    }
-//
-//    private int getColorForTemperature(float temperature) {
-//        if (temperature < 15) {
-//            return Color.BLUE;
-//        } else if (temperature < 25) {
-//            return Color.GREEN;
-//        } else if (temperature < 35) {
-//            return Color.YELLOW;
-//        } else {
-//            return Color.RED;
-//        }
-//    }
-//    private void checkTemperatureAndNotify(float currentTemperature) {
-//        // Πάρε τις ρυθμίσεις του χρήστη
-//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-//        boolean notificationsEnabled = prefs.getBoolean("enable_notifications", true);
-//        String maxTemperatureString = prefs.getString("max_temperature", "30");
-//        float maxTemperature = Float.parseFloat(maxTemperatureString);
-//
-//        // Έλεγχος: Αν είναι ενεργοποιημένες οι ειδοποιήσεις και ξεπεράστηκε η θερμοκρασία
-//        if (notificationsEnabled && currentTemperature > maxTemperature) {
-//            sendNotification("Temperature Alert", "The temperature exceeded " + maxTemperature + "°C!");
-//        }
-//    }
-//
-//    private void sendNotification(String title, String message) {
-//        NotificationManager notificationManager = (NotificationManager) requireContext().getSystemService(Context.NOTIFICATION_SERVICE);
-//        String channelId = "temperature_alerts";
-//
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-//            NotificationChannel channel = new NotificationChannel(channelId, "Temperature Alerts", NotificationManager.IMPORTANCE_HIGH);
-//            channel.setDescription("Notifications for temperature threshold alerts");
-//            notificationManager.createNotificationChannel(channel);
-//        }
-//
-//        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), channelId)
-//                .setSmallIcon(R.drawable.ic_notification) // Βεβαιώσου ότι υπάρχει το εικονίδιο
-//                .setContentTitle(title)
-//                .setContentText(message)
-//                .setPriority(NotificationCompat.PRIORITY_HIGH)
-//                .setAutoCancel(true);
-//
-//        notificationManager.notify(1, builder.build());
-//    }
-
-//}
