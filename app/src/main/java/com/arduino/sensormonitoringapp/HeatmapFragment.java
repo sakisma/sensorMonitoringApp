@@ -1,10 +1,13 @@
 package com.arduino.sensormonitoringapp;
 
+import android.app.AlertDialog;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,13 +18,16 @@ import com.anychart.AnyChart;
 import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.HeatDataEntry;
+import com.anychart.charts.Cartesian;
 import com.anychart.charts.HeatMap;
+import com.anychart.enums.ScaleTypes;
 import com.anychart.enums.SelectionMode;
 import com.anychart.graphics.vector.SolidFill;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -29,23 +35,23 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class HeatmapFragment extends Fragment {
 
     private AnyChartView anyChartView;
     private HeatMap heatMap;
     private DatabaseHelper databaseHelper;
-    private long startDate = 0;
-    private long endDate = 0;
+    private int selectedYear = Calendar.getInstance().get(Calendar.YEAR);
     private boolean showTemperature = true;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-    private SimpleDateFormat displayDateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private MaterialButton yearButton;
 
-    @Nullable
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_heatmap, container, false);
     }
 
@@ -54,193 +60,269 @@ public class HeatmapFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         databaseHelper = new DatabaseHelper(requireContext());
-
-        // Initialize chart view
         anyChartView = view.findViewById(R.id.any_chart_view);
         anyChartView.setProgressBar(view.findViewById(R.id.progress_bar));
 
-        // Create heatmap instance
+        // Initialize chart
         heatMap = AnyChart.heatMap();
         setupHeatmap();
         anyChartView.setChart(heatMap);
 
-        // Initialize UI components
-        TextInputLayout dateRangeInputLayout = view.findViewById(R.id.date_range_input);
-        TextInputEditText dateRangeInput = (TextInputEditText) dateRangeInputLayout.getEditText();
-
-        MaterialButton applyFilterButton = view.findViewById(R.id.btn_apply_filter);
-        ChipGroup metricChipGroup = view.findViewById(R.id.metric_chip_group);
-        Chip chipTemperature = view.findViewById(R.id.chip_temperature);
-        Chip chipMoisture = view.findViewById(R.id.chip_moisture);
-
-        // Set default date range (last 7 days)
-        Calendar calendar = Calendar.getInstance();
-        endDate = calendar.getTimeInMillis();
-        calendar.add(Calendar.DAY_OF_MONTH, -7);
-        startDate = calendar.getTimeInMillis();
-        updateDateRangeText(startDate, endDate, dateRangeInput);
-
-        // Date range picker
-        MaterialDatePicker<androidx.core.util.Pair<Long, Long>> dateRangePicker =
-                MaterialDatePicker.Builder.dateRangePicker()
-                        .setTitleText("Select date range")
-                        .build();
-
-        dateRangeInput.setOnClickListener(v -> dateRangePicker.show(getChildFragmentManager(), "DATE_RANGE_PICKER"));
-
-        dateRangePicker.addOnPositiveButtonClickListener(selection -> {
-            startDate = selection.first;
-            endDate = selection.second;
-            updateDateRangeText(startDate, endDate, dateRangeInput);
-        });
+        MaterialButton yearButton = view.findViewById(R.id.year_button);
+        yearButton.setText(String.valueOf(selectedYear));
+        yearButton.setOnClickListener(v -> showYearPicker());
 
         // Metric selection
+        ChipGroup metricChipGroup = view.findViewById(R.id.metric_chip_group);
+        metricChipGroup.setSingleSelection(true); // Ensure only one chip can be selected
+
+        Chip temperatureChip = view.findViewById(R.id.chip_temperature);
+        Chip moistureChip = view.findViewById(R.id.chip_moisture);
+
+        // Set initial state
+        temperatureChip.setChecked(true);
+        moistureChip.setChecked(false);
+        showTemperature = true;
+
         metricChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.chip_temperature) {
                 showTemperature = true;
-                updateHeatmap();
             } else if (checkedId == R.id.chip_moisture) {
                 showTemperature = false;
-                updateHeatmap();
             }
+            updateHeatmap();
         });
 
-        // Apply filter button
-        applyFilterButton.setOnClickListener(v -> updateHeatmap());
-
-        // Initial data load
+        // Initial load
         updateHeatmap();
     }
 
-    private void updateDateRangeText(long start, long end, TextInputEditText input) {
-        String startStr = displayDateFormat.format(new Date(start));
-        String endStr = displayDateFormat.format(new Date(end));
-        input.setText(String.format("%s - %s", startStr, endStr));
+    private void showYearPicker() {
+        // Create a NumberPicker dialog for years
+        final View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.year_picker_dialog, null);
+        final NumberPicker yearPicker = dialogView.findViewById(R.id.year_picker);
+
+        // Set range - from 5 years ago to current year
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        yearPicker.setMinValue(currentYear - 5);
+        yearPicker.setMaxValue(currentYear);
+        yearPicker.setValue(selectedYear);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Year")
+                .setView(dialogView)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    selectedYear = yearPicker.getValue();
+                    yearButton.setText(String.valueOf(selectedYear));
+                    updateHeatmap();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void setupHeatmap() {
         heatMap.stroke("1 #fff");
-        heatMap.hovered()
-                .stroke("6 #fff")
-                .fill(new SolidFill("#545f69", 1d))
-                .labels("{ fontColor: '#fff' }");
 
-        heatMap.interactivity().selectionMode(SelectionMode.NONE);
+        // Create labels for all days (1-31)
+        String[] daysLabels = new String[31];
+        for (int i = 0; i < 31; i++) {
+            daysLabels[i] = String.valueOf(i + 1);
+        }
 
-        heatMap.title().enabled(true);
-        heatMap.title().padding(0d, 0d, 20d, 0d);
+        // Create labels for all months
+        String[] monthLabels = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-        heatMap.labels().enabled(true);
-        heatMap.labels().minFontSize(12d);
+        // Set X-axis labels (days 1-31)
+        heatMap.xAxis(0)
+                .title("Day of Month")
+                .labels()
+                .format("function() { return this.value; }");
 
-        heatMap.yAxis(0).stroke(null);
-        heatMap.yAxis(0).labels().padding(0d, 15d, 0d, 0d);
-        heatMap.yAxis(0).ticks(false);
-        heatMap.xAxis(0).stroke(null);
-        heatMap.xAxis(0).ticks(false);
+        // Set Y-axis labels (months)
+        heatMap.yAxis(0)
+                .title("Month")
+                .labels()
+                .format("function() { " +
+                        "var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; " +
+                        "return months[this.value]; }");
 
-        heatMap.tooltip().title().useHtml(true);
-        heatMap.tooltip().useHtml(true);
+        // Configure grid
+        heatMap.labels()
+                .enabled(true)
+                .minFontSize(8)
+                .format("function() { return (this.heat / " + CustomHeatDataEntry.VALUE_SCALE + ").toFixed(1); }");
+
+        // Color scale for temperature (blue to red)
+        String[] tempColors = {"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"};
+
+        // Color scale for moisture (light to dark blue)
+        String[] moistureColors = {"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"};
+
+        // Set color scale
+        heatMap.colorScale()
+                .colors(showTemperature ? tempColors : moistureColors);
+
+        // Tooltip
+        heatMap.tooltip()
+                .useHtml(true)
+                .titleFormat("function() {" +
+                        "var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];" +
+                        "return '<b>' + months[this.y] + ' ' + this.x + '</b>';}")
+                .format("function() {" +
+                        "return '<span style=\"color:#CECECE\">Value: </span>' + " +
+                        "(this.heat / " + CustomHeatDataEntry.VALUE_SCALE + ").toFixed(2) + " +  // Divide by scale factor
+                        "'<span style=\"color:#CECECE\">" + (showTemperature ? "°C" : "%") + "</span>';}");
+
+        // Enable legend
+        heatMap.legend().enabled(true);
+
+        // Enable scroller and set point to 7 days initially.
+        heatMap.xScroller().enabled(true);
+        heatMap.xZoom().setToPointsCount(7, false, null);
+
     }
 
     private void updateHeatmap() {
-        // Get data from database
-        Cursor cursor = databaseHelper.getDailyAverages(startDate, endDate);
-
-        if (cursor == null || cursor.getCount() == 0) {
-            Toast.makeText(requireContext(), "No data available for selected date range", Toast.LENGTH_SHORT).show();
-            if (cursor != null) {
-                cursor.close();
-            }
-            return;
-        }
-
         List<DataEntry> data = new ArrayList<>();
-        SimpleDateFormat dayFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd", Locale.getDefault());
 
-        // Find min and max values for color scaling
+        // Get data for the year
+        Cursor cursor = databaseHelper.getYearlyData(selectedYear);
+
+        // Create a map to store values for each day/month combination
+        Map<String, Double> dataMap = new HashMap<>();
         double minValue = Double.MAX_VALUE;
         double maxValue = Double.MIN_VALUE;
 
-        // First pass to find min/max
-        while (cursor.moveToNext()) {
-            double value = showTemperature ?
-                    cursor.getDouble(cursor.getColumnIndexOrThrow("avg_temp")) :
-                    cursor.getDouble(cursor.getColumnIndexOrThrow("avg_moisture"));
+        // Process data from the database
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TIMESTAMP));
+                double value = showTemperature ?
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TEMPERATURE)) :
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MOISTURE));
 
-            if (value < minValue) minValue = value;
-            if (value > maxValue) maxValue = value;
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date date = sdf.parse(timestamp.split(" ")[0]);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+
+                    int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+                    int month = cal.get(Calendar.MONTH);
+
+                    // Create a key for this day/month combination
+                    String key = month + ":" + dayOfMonth;
+
+                    // Add or update value in map (for averaging if multiple values exist for same day)
+                    if (dataMap.containsKey(key)) {
+                        double existingValue = dataMap.get(key);
+                        dataMap.put(key, (existingValue + value) / 2); // Simple average
+                    } else {
+                        dataMap.put(key, value);
+                    }
+
+                    // Track min/max values
+                    if (value < minValue) minValue = value;
+                    if (value > maxValue) maxValue = value;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
+            cursor.close();
         }
 
-        // Reset cursor to beginning
-        cursor.moveToFirst();
+        // Set reasonable defaults if no data
+        if (minValue == Double.MAX_VALUE) {
+            minValue = showTemperature ? 0 : 0;
+            maxValue = showTemperature ? 30 : 100;
+        }
 
-        // Second pass to create data entries
-        while (cursor.moveToNext()) {
-            try {
-                String day = cursor.getString(cursor.getColumnIndexOrThrow("day"));
-                Date date = this.dateFormat.parse(day);
+        // Create entries for all possible day/month combinations
+        for (int month = 0; month < 12; month++) {
+            // Get days in month (considering leap years for February)
+            int daysInMonth = 31;
+            if (month == 1) { // February
+                boolean isLeapYear = (selectedYear % 4 == 0 && selectedYear % 100 != 0) || (selectedYear % 400 == 0);
+                daysInMonth = isLeapYear ? 29 : 28;
+            } else if (month == 3 || month == 5 || month == 8 || month == 10) { // April, June, September, November
+                daysInMonth = 30;
+            }
 
-                String dayOfWeek = dayFormat.format(date);
-                String shortDate = dateFormat.format(date);
+            for (int day = 1; day <= daysInMonth; day++) {
+                String key = month + ":" + day;
 
-                double value = showTemperature ?
-                        cursor.getDouble(cursor.getColumnIndexOrThrow("avg_temp")) :
-                        cursor.getDouble(cursor.getColumnIndexOrThrow("avg_moisture"));
+                // Get value from map or use null for empty cells
+                Double value = dataMap.get(key);
 
-                // Normalize value for color (0-1 range)
-                double normalizedValue = (value - minValue) / (maxValue - minValue);
+                if (value != null) {
+                    // Normalize value to 0-100 for display
+                    double normalizedValue = ((value - minValue) / (maxValue - minValue)) * 100;
 
-                data.add(new CustomHeatDataEntry(
-                        dayOfWeek,
-                        shortDate,
-                        normalizedValue,
-                        getColorForValue(normalizedValue, showTemperature)
-                ));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(requireContext(), "Error processing data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    data.add(new CustomHeatDataEntry(
+                            String.valueOf(day),
+                            String.valueOf(month),
+                            normalizedValue,
+                            getColorForValue(normalizedValue/100, showTemperature)
+                    ));
+                } else {
+                    // Add empty cell (transparent or very light color)
+                    data.add(new CustomHeatDataEntry(
+                            String.valueOf(day),
+                            String.valueOf(month),
+                            0,
+                            showTemperature ? "#F5F5F5" : "#F5F5F5"
+                    ));
+                }
             }
         }
-        cursor.close();
 
         // Update chart
-        heatMap.title().text(showTemperature ? "Temperature Heatmap (°C)" : "Moisture Heatmap (%)");
+        heatMap.title().text(showTemperature ?
+                "Temperature in " + selectedYear + " (°C)" :
+                "Soil Moisture in " + selectedYear + " (%)");
 
-        heatMap.tooltip().titleFormat("function() {\n" +
-                        "      return '<b>' + this.y + '</b>';\n" +
-                        "    }")
-                .format("function () {\n" +
-                        "       return '<span style=\"color: #CECECE\">Date: </span>' + this.y + '<br/>' +\n" +
-                        "           '<span style=\"color: #CECECE\">Day: </span>' + this.x + '<br/>' +\n" +
-                        "           '<span style=\"color: #CECECE\">" + (showTemperature ? "Temperature" : "Moisture") + ": </span>' + " +
-                        "(this.heat / 1000 * (" + maxValue + " - " + minValue + ") + " + minValue + ").toFixed(2);\n" +
-                        "   }");
+        // Update color scale
+        heatMap.colorScale()
+                .colors(showTemperature ?
+                        new String[]{"#90caf9", "#42a5f5", "#1e88e5", "#0d47a1", "#ffb74d", "#ff9800", "#ef6c00", "#e65100"} :
+                        new String[]{"#d7ccc8", "#bcaaa4", "#a1887f", "#8d6e63", "#795548", "#6d4c41", "#5d4037", "#4e342e"});
+
+        // Add a legend
+        heatMap.legend()
+                .enabled(true)
+                .title(showTemperature ? "Temperature (°C)" : "Moisture (%)");
 
         heatMap.data(data);
     }
 
     private String getColorForValue(double normalizedValue, boolean isTemperature) {
         if (isTemperature) {
-            // Blue (cool) to Red (hot) gradient for temperature
-            if (normalizedValue < 0.25) return "#90caf9"; // Light blue
-            else if (normalizedValue < 0.5) return "#42a5f5"; // Medium blue
-            else if (normalizedValue < 0.75) return "#ffb74d"; // Orange
-            else return "#ef6c00"; // Dark orange/red
+            if (normalizedValue < 0.125) return "#90caf9";
+            else if (normalizedValue < 0.25) return "#42a5f5";
+            else if (normalizedValue < 0.375) return "#1e88e5";
+            else if (normalizedValue < 0.5) return "#0d47a1";
+            else if (normalizedValue < 0.625) return "#ffb74d";
+            else if (normalizedValue < 0.75) return "#ff9800";
+            else if (normalizedValue < 0.875) return "#ef6c00";
+            else return "#e65100";
         } else {
-            // Brown gradient for moisture (dry to wet)
-            if (normalizedValue < 0.25) return "#d7ccc8"; // Light brown (dry)
-            else if (normalizedValue < 0.5) return "#a1887f"; // Medium brown
-            else if (normalizedValue < 0.75) return "#8d6e63"; // Dark brown
-            else return "#5d4037"; // Very dark brown (wet)
+            if (normalizedValue < 0.125) return "#d7ccc8";
+            else if (normalizedValue < 0.25) return "#bcaaa4";
+            else if (normalizedValue < 0.375) return "#a1887f";
+            else if (normalizedValue < 0.5) return "#8d6e63";
+            else if (normalizedValue < 0.625) return "#795548";
+            else if (normalizedValue < 0.75) return "#6d4c41";
+            else if (normalizedValue < 0.875) return "#5d4037";
+            else return "#4e342e";
         }
     }
 
     private static class CustomHeatDataEntry extends HeatDataEntry {
-        private static final int HEAT_SCALE_FACTOR = 1000;
-        CustomHeatDataEntry(String x, String y, double normalizedHeat, String fill) {
-            super(x, y, (int)(normalizedHeat * HEAT_SCALE_FACTOR));
+        // Scale factor to maintain precision when converting to integer
+        private static final int VALUE_SCALE = 1000;
+        CustomHeatDataEntry(String dayOfMonth, String month, double value, String fill) {
+            super(dayOfMonth, month, (int)(value * VALUE_SCALE));
             setValue("fill", fill);
         }
     }

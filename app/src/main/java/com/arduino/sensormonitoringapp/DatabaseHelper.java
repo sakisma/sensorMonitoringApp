@@ -59,6 +59,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.insert(TABLE_NAME, null, values);
     }
 
+    public Cursor getYearlyData(int year) {
+        // Get all data points for the year
+        String query = "SELECT " +
+                COLUMN_TIMESTAMP + ", " +
+                COLUMN_TEMPERATURE + ", " +
+                COLUMN_MOISTURE + " " +
+                "FROM " + TABLE_NAME + " " +
+                "WHERE strftime('%Y', " + COLUMN_TIMESTAMP + ") = ? " +
+                "ORDER BY " + COLUMN_TIMESTAMP + " ASC";
+
+        return getReadableDatabase().rawQuery(query, new String[]{String.valueOf(year)});
+    }
+
+    public Cursor getYearlyAverages(int year) {
+        // Get daily averages for the year
+        String query = "SELECT " +
+                "date(" + COLUMN_TIMESTAMP + ") as day, " +
+                "AVG(" + COLUMN_TEMPERATURE + ") as avg_temp, " +
+                "AVG(" + COLUMN_MOISTURE + ") as avg_moisture " +
+                "FROM " + TABLE_NAME + " " +
+                "WHERE strftime('%Y', " + COLUMN_TIMESTAMP + ") = ? " +
+                "GROUP BY day " +
+                "ORDER BY day ASC";
+
+        return getReadableDatabase().rawQuery(query, new String[]{String.valueOf(year)});
+    }
+
     public Cursor getDataForDateRange(String startDate, String endDate) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT * FROM " + TABLE_NAME +
