@@ -20,12 +20,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
     private FirebaseDatabase database;
     private DatabaseHelper databaseHelper;
     private DatabaseReference sensorDataRef;
     private BottomNavigationView bottomNavigationView;
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,14 +48,45 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
             bottomNavigationView.setOnItemSelectedListener(this);
             loadFragment(new HomeFragment());
 
-//            // Initialize Firebase Database
+            // Initialize Firebase Database
             database = FirebaseDatabase.getInstance();
             sensorDataRef = database.getReference("sensorData");
 
+            // Get Token and save it to realtime db.
+            setupFirebaseMessaging();
+
+            // Initialize local sqlite database
             databaseHelper = new DatabaseHelper(this);
 
+            // Sync Realtime db data with local sqlite
             syncDataFromFirebase();
         }
+    }
+
+    private void setupFirebaseMessaging() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+
+                    // Get new FCM registration token
+                    String token = task.getResult();
+
+                    // Save token to Firebase Database
+                    FirebaseDatabase.getInstance().getReference("/userSettings/fcmToken")
+                            .setValue(token)
+                            .addOnCompleteListener(dbTask -> {
+                                if (dbTask.isSuccessful()) {
+                                    Log.d(TAG, "Token saved to Firebase Database");
+                                } else {
+                                    Log.e(TAG, "Failed to save token to Firebase Database", dbTask.getException());
+                                }
+                            });
+
+                    Log.d(TAG, "FCM Token: " + token);
+                });
     }
 
     private void syncDataFromFirebase() {
