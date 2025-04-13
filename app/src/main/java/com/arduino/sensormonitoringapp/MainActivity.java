@@ -34,33 +34,26 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         super.onCreate(savedInstanceState);
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        // todo set this up to false.
-        boolean isSetupCompleted = prefs.getBoolean("setup_completed", true);
+        setContentView(R.layout.activity_main);
 
-        if (!isSetupCompleted) {
-            startActivity(new Intent(this, SetupArduinoWifi.class));
-            finish();
-        } else {
-            setContentView(R.layout.activity_main);
+        // Bottom navigation
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setOnItemSelectedListener(this);
+        loadFragment(new HomeFragment());
 
-            // Bottom navigation
-            bottomNavigationView = findViewById(R.id.bottom_navigation);
-            bottomNavigationView.setOnItemSelectedListener(this);
-            loadFragment(new HomeFragment());
+        // Initialize Firebase Database
+        database = FirebaseDatabase.getInstance();
+        sensorDataRef = database.getReference("sensorData");
 
-            // Initialize Firebase Database
-            database = FirebaseDatabase.getInstance();
-            sensorDataRef = database.getReference("sensorData");
+        // Get Token and save it to realtime db.
+        setupFirebaseMessaging();
 
-            // Get Token and save it to realtime db.
-            setupFirebaseMessaging();
+        // Initialize local sqlite database
+        databaseHelper = new DatabaseHelper(this);
 
-            // Initialize local sqlite database
-            databaseHelper = new DatabaseHelper(this);
-
-            // Sync Realtime db data with local sqlite
-            syncDataFromFirebase();
-        }
+        // Sync Realtime db data with local sqlite
+        // TODO: OPTIMIZE SYNC to hanlde the volume of 
+//        syncDataFromFirebase();
     }
 
     private void setupFirebaseMessaging() {
