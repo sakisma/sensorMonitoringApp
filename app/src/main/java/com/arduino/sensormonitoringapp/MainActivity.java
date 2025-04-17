@@ -12,6 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
@@ -51,9 +56,35 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         // Initialize local sqlite database
         databaseHelper = new DatabaseHelper(this);
 
+        // Schedule sync work
+        scheduleSync();
+
         // Sync Realtime db data with local sqlite
         // TODO: OPTIMIZE SYNC to hanlde the volume of 
 //        syncDataFromFirebase();
+    }
+
+    private void scheduleSync() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(SyncWorker.class)
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueue(syncRequest);
+
+        // Optional: Observe work status
+        WorkManager.getInstance(this).getWorkInfoByIdLiveData(syncRequest.getId())
+                .observe(this, workInfo -> {
+                    if (workInfo != null) {
+                        Log.d("SyncWork", "Work state: " + workInfo.getState());
+                        if (workInfo.getState() == WorkInfo.State.ENQUEUED) {
+                            Log.i("SyncWork", "Sync work enqueued");
+                        }
+                    }
+                });
     }
 
     private void setupFirebaseMessaging() {
@@ -100,10 +131,11 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
 
                         Double temp = timeSnapshot.child("temp").getValue(Double.class);
                         Double moisture = timeSnapshot.child("moisture").getValue(Double.class);
+                        Double humidity = timeSnapshot.child("humidity").getValue(Double.class);
 
                         if (temp != null && moisture != null) {
                             // Insert data into SQLite
-                            long rowId = databaseHelper.insertData(date, time, temp, moisture);
+                            long rowId = databaseHelper.insertData(date, time, temp, moisture, humidity);
                             if (rowId != -1) {
                                 // Data inserted successfully, mark as synced in Firebase
                                 timeSnapshot.getRef().child("sync")

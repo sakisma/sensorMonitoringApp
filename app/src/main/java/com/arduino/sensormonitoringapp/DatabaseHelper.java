@@ -16,13 +16,14 @@ import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "SensorData.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 10;
     private static final String TABLE_NAME = "sensor_data";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_DATE = "date";
     private static final String COLUMN_TIME = "time";
     static final String COLUMN_TEMPERATURE = "temperature";
     static final String COLUMN_MOISTURE = "moisture";
+    static final String COLUMN_HUMIDITY = "humidity";
     static final String COLUMN_TIMESTAMP = "timestamp"; // New column
 
     public DatabaseHelper(Context context) {
@@ -36,6 +37,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_TIME + " TEXT, " +
                 COLUMN_TIMESTAMP + " TEXT, " +
                 COLUMN_TEMPERATURE + " REAL, " +
+                COLUMN_HUMIDITY + " REAL, " +
                 COLUMN_MOISTURE + " REAL)";
         db.execSQL(createTableQuery);
     }
@@ -48,15 +50,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public long insertData(String date, String time, double temp, double moisture) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_DATE, date);
-        values.put(COLUMN_TIME, time);
-        values.put(COLUMN_TIMESTAMP, date + " " + time);
-        values.put(COLUMN_TEMPERATURE, temp);
-        values.put(COLUMN_MOISTURE, moisture);
-        return db.insert(TABLE_NAME, null, values);
+    public long insertData(String date, String time, double temp, double moisture, double humidity) {
+        SQLiteDatabase db = null;
+        try {
+            db = this.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_DATE, date);
+            values.put(COLUMN_TIME, time);
+            values.put(COLUMN_TIMESTAMP, date + " " + time);
+            values.put(COLUMN_TEMPERATURE, temp);
+            values.put(COLUMN_MOISTURE, moisture);
+            values.put(COLUMN_HUMIDITY, humidity);
+            return db.insert(TABLE_NAME, null, values);
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+        }
     }
 
     public Cursor getYearlyData(int year) {
