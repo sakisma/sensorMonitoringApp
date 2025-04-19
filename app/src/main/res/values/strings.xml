@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">SensorMonitoringApp</string>
     <string name="title_activity_menu">menu</string>
+    <string name="select_ssid_prompt">Select a WiFi Network</string>
     <string-array name="date_ranges">
         <item>Daily</item>
         <item>Weekly</item>
@@ -8,5 +9,10 @@
     </string-array>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string-array name="chart_type_options">
+        <item>Temperature</item>
+        <item>Moisture</item>
+        <item>Avg Temperature</item>
+    </string-array>
 
 </resources>

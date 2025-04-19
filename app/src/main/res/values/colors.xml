@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colors for the app -->
-    <color name="greenhouseBackground">#E8F5E9</color> <!-- Light green background -->
-    <color name="greenhousePrimaryText">#2E7D32</color> <!-- Dark green for titles -->
-    <color name="greenhouseSecondaryText">#558B2F</color> <!-- Green for labels -->
-    <color name="greenhouseValueText">#1B5E20</color> <!-- Bold dark green for values -->
-    <color name="borderColor">#AED581</color> <!-- Border around sections -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="greenhousePrimary">#00563B</color>
+    <color name="greenhouseSecondary">#8FBC8F</color>
+    <color name="greenhouseBackground">#F5F5F5</color>
+    <color name="greenhouseAccent">#FFD700</color>
+    <color name="greenhousePrimaryText">#212121</color>
+    <color name="greenhouseSecondaryText">#757575</color>
+    <color name="cardBackground">#E8F5E9</color>
+    <color name="cardStrokeColor">#66BB6A</color>
+    <color name="tempIconColor">#FFB300</color>
+    <color name="moistureIconColor">#81D4FA</color>
 </resources>
