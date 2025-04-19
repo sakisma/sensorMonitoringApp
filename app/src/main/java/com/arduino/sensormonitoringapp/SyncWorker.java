@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SyncWorker extends Worker {
 
     private static final String TAG = "SyncWorker";
-    private static final int BATCH_SIZE = 200;
+    private static final int BATCH_SIZE = 144;
     private static final String CHANNEL_ID = "sync_notification_channel";
 
 
@@ -168,66 +168,6 @@ public class SyncWorker extends Worker {
         }
     }
 
-//    private Result syncData(DatabaseReference sensorDataRef, DatabaseHelper databaseHelper, NotificationManager notificationManager) {
-//        final CountDownLatch latch = new CountDownLatch(1);
-//        final Result[] result = {Result.success()};
-//        final AtomicInteger processedCount = new AtomicInteger(0);
-//
-//        sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dateSnapshots) {
-//                Log.d(TAG, "Found " + dateSnapshots.getChildrenCount() + " date entries");
-//
-//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
-//                    String date = dateSnapshot.getKey();
-//                    Log.d(TAG, "Processing date: " + date);
-//
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-//
-//                        // Skip if already synced or sync field missing
-//                        if (isSynced == null || isSynced) {
-//                            continue;
-//                        }
-//
-//                        // Process the unsynced record
-//                        if (processRecord(date, timeSnapshot, databaseHelper)) {
-//                            processedCount.incrementAndGet();
-//
-//                            // Stop if we've processed enough
-//                            if (processedCount.get() >= BATCH_SIZE) {
-//                                break;
-//                            }
-//                        }
-//                    }
-//
-//                    // Break outer loop if we've processed enough
-//                    if (processedCount.get() >= BATCH_SIZE) {
-//                        break;
-//                    }
-//                }
-//
-//                Log.d(TAG, "Processed " + processedCount.get() + " records");
-//                result[0] = processedCount.get() > 0 ? Result.retry() : Result.success();
-//                latch.countDown();
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e(TAG, "Sync cancelled: " + error.getMessage());
-//                result[0] = Result.failure();
-//                latch.countDown();
-//            }
-//        });
-//
-//        try {
-//            latch.await(30, TimeUnit.SECONDS);
-//            return result[0];
-//        } catch (InterruptedException e) {
-//            return Result.retry();
-//        }
-//    }
-
     private boolean processRecord(String date, DataSnapshot timeSnapshot, DatabaseHelper databaseHelper) {
         String time = timeSnapshot.getKey();
         Double temp = timeSnapshot.child("temp").getValue(Double.class);
@@ -261,81 +201,4 @@ public class SyncWorker extends Worker {
             databaseHelper.close();
         }
     }
-
-//    private Result syncData(DatabaseReference sensorDataRef, DatabaseHelper databaseHelper) {
-//        // Get last sync timestamp from preferences
-//        SharedPreferences prefs = getApplicationContext().getSharedPreferences("SyncPrefs", Context.MODE_PRIVATE);
-//        long lastSyncTime = prefs.getLong("lastSyncTime", 0);
-//
-//        // Query only unsynced data
-//        Query query = sensorDataRef.orderByChild("sync").equalTo(false).limitToFirst(BATCH_SIZE);
-//
-//        final Result[] result = {Result.success()};
-//        final CountDownLatch latch = new CountDownLatch(1);
-//
-//        query.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                if (!snapshot.exists()) {
-//                    Log.i(TAG, "No data to sync");
-//                    latch.countDown();
-//                    return;
-//                }
-//
-//                int processed = 0;
-//                for (DataSnapshot dateSnapshot : snapshot.getChildren()) {
-//                    String date = dateSnapshot.getKey();
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        if (processed >= BATCH_SIZE) break;
-//
-//                        processRecord(date, timeSnapshot, databaseHelper);
-//                        processed++;
-//                    }
-//                }
-//
-//                // Update last sync time
-//                prefs.edit().putLong("lastSyncTime", System.currentTimeMillis()).apply();
-//
-//                // If we processed a full batch, there might be more data
-//                if (processed == BATCH_SIZE) {
-//                    Log.i(TAG, "Processed batch of " + BATCH_SIZE + ", scheduling next sync");
-//                    result[0] = Result.retry();
-//                }
-//
-//                latch.countDown();
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e(TAG, "Sync cancelled: " + error.getMessage());
-//                result[0] = Result.failure();
-//                latch.countDown();
-//            }
-//        });
-//
-//        try {
-//            latch.await(30, TimeUnit.SECONDS); // Wait with timeout
-//            return result[0];
-//        } catch (InterruptedException e) {
-//            return Result.retry();
-//        }
-//    }
-//
-//    private void processRecord(String date, DataSnapshot timeSnapshot, DatabaseHelper databaseHelper) {
-//        String time = timeSnapshot.getKey();
-//        Double temp = timeSnapshot.child("temp").getValue(Double.class);
-//        Double moisture = timeSnapshot.child("moisture").getValue(Double.class);
-//
-//        if (temp != null && moisture != null) {
-//            long rowId = databaseHelper.insertData(date, time, temp, moisture);
-//            if (rowId != -1) {
-//                timeSnapshot.getRef().child("sync").setValue(true)
-//                        .addOnCompleteListener(task -> {
-//                            if (task.isSuccessful()) {
-//                                Log.d(TAG, "Marked as synced: " + date + " " + time);
-//                            }
-//                        });
-//            }
-//        }
-//    }
 }
