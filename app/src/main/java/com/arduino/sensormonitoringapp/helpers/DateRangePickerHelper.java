@@ -1,5 +1,5 @@
 package com.arduino.sensormonitoringapp.helpers;
-import android.app.DatePickerDialog;
+
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,15 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.datepicker.CalendarConstraints;
-import com.google.android.material.datepicker.CompositeDateValidator;
 import com.google.android.material.datepicker.DateValidatorPointBackward;
-import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 public class DateRangePickerHelper extends ArrayAdapter<String> {
     private Context context;
