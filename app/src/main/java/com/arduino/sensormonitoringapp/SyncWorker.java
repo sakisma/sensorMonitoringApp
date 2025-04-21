@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.database.Cursor;
 import android.os.Build;
 import android.util.Log;
 
@@ -18,6 +19,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +31,7 @@ public class SyncWorker extends Worker {
     private static final String TAG = "SyncWorker";
     private static final int BATCH_SIZE = 144;
     private static final String CHANNEL_ID = "sync_notification_channel";
-
+    private static final long TWO_HOURS_IN_MILLIS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
     public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -96,43 +100,44 @@ public class SyncWorker extends Worker {
         final Result[] result = {Result.success()};
         final AtomicInteger processedCount = new AtomicInteger(0);
 
+        // Step 1: Retry Failed Deletions
+        retryFailedDeletions(sensorDataRef, databaseHelper, notificationManager);
+
         sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dateSnapshots) {
                 int totalRecords = 0;
-                int unsyncedRecords = 0;
+                int syncableRecords = 0;
 
-                // First pass to count records
+                // Count records (excluding recent ones)
                 for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
                     for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
                         totalRecords++;
-                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-                        if (isSynced == null || !isSynced) {
-                            unsyncedRecords++;
+                        if (isRecordOlderThanTwoHours(dateSnapshot.getKey(), timeSnapshot.getKey())) {
+                            syncableRecords++;
                         }
                     }
                 }
 
                 notificationManager.notify(1, createSyncNotification(
-                        "Syncing " + unsyncedRecords + " of " + totalRecords + " records"));
+                        "Syncing " + syncableRecords + " of " + totalRecords + " records"));
 
-                // Second pass to process data
+                // Process data
                 for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
                     String date = dateSnapshot.getKey();
 
                     for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-                        if (isSynced != null && isSynced) {
+                        // Skip records newer than 2 hours
+                        if (!isRecordOlderThanTwoHours(date, timeSnapshot.getKey())) {
                             continue;
                         }
 
                         if (processRecord(date, timeSnapshot, databaseHelper)) {
                             int processed = processedCount.incrementAndGet();
 
-                            // Update progress every 10 records
                             if (processed % 10 == 0) {
                                 notificationManager.notify(1, createSyncNotification(
-                                        "Synced " + processed + " of " + unsyncedRecords + " records"));
+                                        "Synced " + processed + " of " + syncableRecords + " records"));
                             }
 
                             if (processed >= BATCH_SIZE) {
@@ -166,6 +171,146 @@ public class SyncWorker extends Worker {
         }
     }
 
+    private void retryFailedDeletions(DatabaseReference sensorDataRef,
+                                      DatabaseHelper databaseHelper,
+                                      NotificationManager notificationManager) {
+        Cursor cursor = databaseHelper.getFailedDeletions();
+        int retryCount = cursor.getCount();
+        AtomicInteger deletedCount = new AtomicInteger(0);
+
+        if (retryCount > 0) {
+            notificationManager.notify(1, createSyncNotification(
+                    "Retrying " + retryCount + " failed deletions..."));
+        }
+
+        while (cursor.moveToNext()) {
+            String date = cursor.getString(cursor.getColumnIndexOrThrow("date"));
+            String time = cursor.getString(cursor.getColumnIndexOrThrow("time"));
+
+            // Only retry if older than 2 hours
+            if (!isRecordOlderThanTwoHours(date, time)) {
+                continue;
+            }
+
+            DatabaseReference recordRef = sensorDataRef.child(date).child(time);
+            CountDownLatch deleteLatch = new CountDownLatch(1);
+            recordRef.removeValue((error, ref) -> {
+                if (error == null) {
+                    databaseHelper.removeFailedDeletion(date, time);
+                    Log.d(TAG, "Retry succeeded: Deleted " + date + " " + time);
+                    deletedCount.incrementAndGet();
+                } else {
+                    Log.e(TAG, "Retry failed: " + date + " " + time + ", error: " + error.getMessage());
+                }
+                deleteLatch.countDown();
+            });
+
+            try {
+                deleteLatch.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Interrupted during retry: " + date + " " + time);
+            }
+        }
+        cursor.close();
+
+        if (retryCount > 0) {
+            notificationManager.notify(1, createSyncNotification(
+                    "Retried " + retryCount + " failed deletions, " + deletedCount + " succeeded"));
+        }
+    }
+
+//    private Result syncData(DatabaseReference sensorDataRef,
+//                            DatabaseHelper databaseHelper,
+//                            NotificationManager notificationManager) {
+//        final CountDownLatch latch = new CountDownLatch(1);
+//        final Result[] result = {Result.success()};
+//        final AtomicInteger processedCount = new AtomicInteger(0);
+//
+//        sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dateSnapshots) {
+//                int totalRecords = 0;
+//                int unsyncedRecords = 0;
+//
+//                // First pass to count records
+//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
+//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
+//                        totalRecords++;
+//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
+//                        if (isSynced == null || !isSynced) {
+//                            unsyncedRecords++;
+//                        }
+//                    }
+//                }
+//
+//                notificationManager.notify(1, createSyncNotification(
+//                        "Syncing " + unsyncedRecords + " of " + totalRecords + " records"));
+//
+//                // Second pass to process data
+//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
+//                    String date = dateSnapshot.getKey();
+//
+//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
+//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
+//                        if (isSynced != null && isSynced) {
+//                            continue;
+//                        }
+//
+//                        if (processRecord(date, timeSnapshot, databaseHelper)) {
+//                            int processed = processedCount.incrementAndGet();
+//
+//                            // Update progress every 10 records
+//                            if (processed % 10 == 0) {
+//                                notificationManager.notify(1, createSyncNotification(
+//                                        "Synced " + processed + " of " + unsyncedRecords + " records"));
+//                            }
+//
+//                            if (processed >= BATCH_SIZE) {
+//                                break;
+//                            }
+//                        }
+//                    }
+//
+//                    if (processedCount.get() >= BATCH_SIZE) {
+//                        break;
+//                    }
+//                }
+//
+//                result[0] = processedCount.get() > 0 ? Result.retry() : Result.success();
+//                latch.countDown();
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                Log.e(TAG, "Sync cancelled: " + error.getMessage());
+//                result[0] = Result.failure();
+//                latch.countDown();
+//            }
+//        });
+//
+//        try {
+//            latch.await(30, TimeUnit.SECONDS);
+//            return result[0];
+//        } catch (InterruptedException e) {
+//            return Result.retry();
+//        }
+//    }
+
+    private boolean isRecordOlderThanTwoHours(String date, String time) {
+        try {
+            // Assuming date format is "yyyy-MM-dd" and time is "HH:mm:ss"
+            String dateTimeStr = date + " " + time;
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+            Date recordDate = sdf.parse(dateTimeStr);
+            long recordTime = recordDate.getTime();
+            long currentTime = System.currentTimeMillis();
+            return (currentTime - recordTime) > TWO_HOURS_IN_MILLIS;
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing date/time: " + date + " " + time, e);
+            return true; // Assume old if parsing fails to avoid skipping valid records
+        }
+    }
+
     private boolean processRecord(String date, DataSnapshot timeSnapshot, DatabaseHelper databaseHelper) {
         String time = timeSnapshot.getKey();
         Double temp = timeSnapshot.child("temp").getValue(Double.class);
@@ -178,24 +323,30 @@ public class SyncWorker extends Worker {
         }
 
         try {
-            long rowId = databaseHelper.insertData(date, time, temp, moisture, humidity);
+            long rowId = databaseHelper.insertDataWithCheck(date, time, temp, moisture, humidity);
             if (rowId == -1) {
                 Log.w(TAG, "Failed to insert record: " + date + " " + time);
                 return false;
             }
 
-            // Mark as synced
-            timeSnapshot.getRef().child("sync").setValue(true)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "Marked as synced: " + date + " " + time);
-                        } else {
-                            Log.e(TAG, "Failed to mark as synced: " + date + " " + time);
-                        }
-                    });
+            if (rowId >= 0) {
+                // Delete from firebase
+                timeSnapshot.getRef().removeValue((error, ref) -> {
+                    if (error == null) {
+                        Log.d(TAG, "Deleted record: " + date + " " + time);
+                    } else {
+                        Log.e(TAG, "Failed to delete record: " + date + " " + time + ", error: " + error.getMessage());
+                        databaseHelper.addFailedDeletion(date, time);
+                    }
+                });
+            }
 
             return true;
-        } finally {
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing record: " + date + " " + time, e);
+            return false;
+        }
+        finally {
             databaseHelper.close();
         }
     }

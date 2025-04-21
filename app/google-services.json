@@ -3,52 +3,14 @@
     "project_number": "97573695406",
     "firebase_url": "https://arduino-ethesis-project-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "arduino-ethesis-project",
-    "storage_bucket": "arduino-ethesis-project.appspot.com"
+    "storage_bucket": "arduino-ethesis-project.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:97573695406:android:197b689ef3a955cb59a23f",
-        "android_client_info": {
-          "package_name": "com.arduino.iotcontroller"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDrKxh7Z1ppUz9QF1ELaRHolVR2eSH1JAM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:97573695406:android:d3dc58a97b86fcca59a23f",
+        "mobilesdk_app_id": "1:97573695406:android:b1e1134c679bb35959a23f",
         "android_client_info": {
           "package_name": "com.arduino.sensormonitoringapp"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDrKxh7Z1ppUz9QF1ELaRHolVR2eSH1JAM"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:97573695406:android:fd32ebe51e7052f359a23f",
-        "android_client_info": {
-          "package_name": "com.greenhousecontrol"
         }
       },
       "oauth_client": [],
