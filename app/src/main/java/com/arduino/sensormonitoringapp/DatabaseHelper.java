@@ -134,6 +134,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT " +
                 COLUMN_TIMESTAMP + ", " +
                 COLUMN_TEMPERATURE + ", " +
+                COLUMN_HUMIDITY + ", " +
                 COLUMN_MOISTURE + " " +
                 "FROM " + TABLE_NAME + " " +
                 "WHERE strftime('%Y', " + COLUMN_TIMESTAMP + ") = ? " +
