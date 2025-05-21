@@ -220,7 +220,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<DataPoint> getDataPoints(String startDate, String endDate) {
         List<DataPoint> dataPoints = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT timestamp, temperature, moisture FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp ASC";
+        String query = "SELECT timestamp, temperature, moisture, humidity FROM " + TABLE_NAME + " WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp ASC";
         Cursor cursor = db.rawQuery(query, new String[]{startDate, endDate});
 
         if (cursor.moveToFirst()) {
@@ -228,7 +228,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String timestamp = cursor.getString(0);
                 double temperature = cursor.getDouble(1);
                 int moisture = cursor.getInt(2);
-                dataPoints.add(new DataPoint(timestamp, temperature, moisture));
+                double humidity = cursor.getDouble(3);
+                dataPoints.add(new DataPoint(timestamp, temperature, moisture, humidity));
             } while (cursor.moveToNext());
         }
         cursor.close();
@@ -249,12 +250,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static class DataPoint {
         public String timestamp;
         public double temperature;
+        public double humidity;
         public int moisture;
 
-        public DataPoint(String timestamp, double temperature, int moisture) {
+        public DataPoint(String timestamp, double temperature, int moisture, double humidity) {
             this.timestamp = timestamp;
             this.temperature = temperature;
             this.moisture = moisture;
+            this.humidity = humidity;
         }
     }
 }
