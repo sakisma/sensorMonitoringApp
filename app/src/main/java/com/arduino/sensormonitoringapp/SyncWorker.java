@@ -61,7 +61,6 @@ public class SyncWorker extends Worker {
                 .build();
     }
 
-
     @NonNull
     @Override
     public Result doWork() {
@@ -219,83 +218,6 @@ public class SyncWorker extends Worker {
         }
     }
 
-//    private Result syncData(DatabaseReference sensorDataRef,
-//                            DatabaseHelper databaseHelper,
-//                            NotificationManager notificationManager) {
-//        final CountDownLatch latch = new CountDownLatch(1);
-//        final Result[] result = {Result.success()};
-//        final AtomicInteger processedCount = new AtomicInteger(0);
-//
-//        sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dateSnapshots) {
-//                int totalRecords = 0;
-//                int unsyncedRecords = 0;
-//
-//                // First pass to count records
-//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        totalRecords++;
-//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-//                        if (isSynced == null || !isSynced) {
-//                            unsyncedRecords++;
-//                        }
-//                    }
-//                }
-//
-//                notificationManager.notify(1, createSyncNotification(
-//                        "Syncing " + unsyncedRecords + " of " + totalRecords + " records"));
-//
-//                // Second pass to process data
-//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
-//                    String date = dateSnapshot.getKey();
-//
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-//                        if (isSynced != null && isSynced) {
-//                            continue;
-//                        }
-//
-//                        if (processRecord(date, timeSnapshot, databaseHelper)) {
-//                            int processed = processedCount.incrementAndGet();
-//
-//                            // Update progress every 10 records
-//                            if (processed % 10 == 0) {
-//                                notificationManager.notify(1, createSyncNotification(
-//                                        "Synced " + processed + " of " + unsyncedRecords + " records"));
-//                            }
-//
-//                            if (processed >= BATCH_SIZE) {
-//                                break;
-//                            }
-//                        }
-//                    }
-//
-//                    if (processedCount.get() >= BATCH_SIZE) {
-//                        break;
-//                    }
-//                }
-//
-//                result[0] = processedCount.get() > 0 ? Result.retry() : Result.success();
-//                latch.countDown();
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e(TAG, "Sync cancelled: " + error.getMessage());
-//                result[0] = Result.failure();
-//                latch.countDown();
-//            }
-//        });
-//
-//        try {
-//            latch.await(30, TimeUnit.SECONDS);
-//            return result[0];
-//        } catch (InterruptedException e) {
-//            return Result.retry();
-//        }
-//    }
-
     private boolean isRecordOlderThanTwoHours(String date, String time) {
         try {
             // Assuming date format is "yyyy-MM-dd" and time is "HH:mm:ss"
@@ -345,8 +267,7 @@ public class SyncWorker extends Worker {
         } catch (Exception e) {
             Log.e(TAG, "Error processing record: " + date + " " + time, e);
             return false;
-        }
-        finally {
+        } finally {
             databaseHelper.close();
         }
     }

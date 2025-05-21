@@ -37,7 +37,6 @@ public class HistoricalDataFragment extends Fragment {
     private String selectedChartType = "Line Chart";
     private String selectedDateRange = "Last 24 Hours";
     private String selectedAggregation = "Daily";
-
     private String startDate, endDate;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 

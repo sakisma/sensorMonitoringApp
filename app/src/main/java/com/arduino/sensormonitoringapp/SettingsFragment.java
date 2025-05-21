@@ -32,8 +32,6 @@ public class SettingsFragment extends Fragment {
     private MaterialButton saveThresholdsButton;
     private boolean thresholdsChanged = false;
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
