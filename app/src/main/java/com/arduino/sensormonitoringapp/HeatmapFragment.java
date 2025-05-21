@@ -293,7 +293,7 @@ public class HeatmapFragment extends Fragment {
 
         // Configure legend with proper min/max values
         heatMap.legend()
-                .enabled(true)
+                .enabled(false)
                 .itemsFormat("function() {" +
                         "var range = " + (actualMaxValue - actualMinValue) + ";" +
                         "var min = " + actualMinValue + ";" +
