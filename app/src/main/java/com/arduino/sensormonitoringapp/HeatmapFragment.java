@@ -177,9 +177,6 @@ public class HeatmapFragment extends Fragment {
                         "(this.heat === 0 ? '0.00' : (this.heat / " + VALUE_SCALE + ").toFixed(2)) + " +
                         "'<span style=\"color:#CECECE\">" + getMetricUnit() + "</span>';}");
 
-        // Enable legend
-        heatMap.legend().enabled(true);
-
         // Enable scroller and set point to 7 days initially
         heatMap.xScroller().enabled(true);
         heatMap.xZoom().setToPointsCount(7, false, null);
@@ -210,54 +207,7 @@ public class HeatmapFragment extends Fragment {
         actualMaxValue = Double.MIN_VALUE;
 
         // Process data from the database
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TIMESTAMP));
-                double value;
-                switch (selectedMetric) {
-                    case "temperature":
-                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TEMPERATURE));
-                        break;
-                    case "moisture":
-                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MOISTURE));
-                        break;
-                    case "humidity":
-                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HUMIDITY));
-                        break;
-                    default:
-                        value = 0;
-                }
-
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    Date date = sdf.parse(timestamp.split(" ")[0]);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(date);
-
-                    int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
-                    int month = cal.get(Calendar.MONTH);
-
-                    // Create a key for this day/month combination
-                    String key = month + ":" + dayOfMonth;
-
-                    // Add or update value in map (for averaging if multiple values exist)
-                    if (dataMap.containsKey(key)) {
-                        double existingValue = dataMap.get(key);
-                        dataMap.put(key, (existingValue + value) / 2); // Simple average
-                    } else {
-                        dataMap.put(key, value);
-                    }
-
-                    // Track min/max values
-                    if (value < actualMinValue) actualMinValue = value;
-                    if (value > actualMaxValue) actualMaxValue = value;
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
+        calculateDailyAverages(cursor, dataMap);
 
         // Set reasonable defaults if no data
         if (actualMinValue == Double.MAX_VALUE) {
@@ -320,19 +270,58 @@ public class HeatmapFragment extends Fragment {
                                 new String[]{"#b3e2cd", "#81c784", "#4caf50", "#388e3c", "#2e7d32", "#1b5e20", "#33691e", "#1a3c34"}
         );
 
-        // Configure legend with proper min/max values
-        heatMap.legend()
-                .enabled(false)
-                .itemsFormat("function() {" +
-                        "var range = " + (actualMaxValue - actualMinValue) + ";" +
-                        "var min = " + actualMinValue + ";" +
-                        "var step = range / 7;" +
-                        "var value = min + step * this.index;" +
-                        "return (value / " + VALUE_SCALE + ").toFixed(1) + ('" + getMetricUnit() + "');" +
-                        "}")
-                .title(selectedMetric.equals("temperature") ? "Temperature (°C)" : selectedMetric.equals("moisture") ? "Moisture (%)" : "Humidity (%)");
-
         heatMap.data(data);
+    }
+
+    private void calculateDailyAverages(Cursor cursor, Map<String, Double> dataMap) {
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String timestamp = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TIMESTAMP));
+                double value;
+                switch (selectedMetric) {
+                    case "temperature":
+                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_TEMPERATURE));
+                        break;
+                    case "moisture":
+                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_MOISTURE));
+                        break;
+                    case "humidity":
+                        value = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_HUMIDITY));
+                        break;
+                    default:
+                        value = 0;
+                }
+
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date date = sdf.parse(timestamp.split(" ")[0]);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+
+                    int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+                    int month = cal.get(Calendar.MONTH);
+
+                    // Create a key for this day/month combination
+                    String key = month + ":" + dayOfMonth;
+
+                    // Add or update value in map (for averaging if multiple values exist)
+                    if (dataMap.containsKey(key)) {
+                        double existingValue = dataMap.get(key);
+                        dataMap.put(key, (existingValue + value) / 2); // Simple average
+                    } else {
+                        dataMap.put(key, value);
+                    }
+
+                    // Track min/max values
+                    if (value < actualMinValue) actualMinValue = value;
+                    if (value > actualMaxValue) actualMaxValue = value;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
     }
 
     private String getColorForValue(double normalizedValue) {
