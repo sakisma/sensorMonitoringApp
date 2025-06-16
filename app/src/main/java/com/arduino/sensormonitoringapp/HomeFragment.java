@@ -31,12 +31,13 @@ public class HomeFragment extends Fragment {
     private String prevTemp = "", prevMoisture = "", prevHumidity = "";
 
 
+    //Inflate the layout, Firebase and binds the UI elements
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Bind views
+        //Bind views
         tempValueText = view.findViewById(R.id.tempValue);
         moistureValueText = view.findViewById(R.id.moistureValue);
         humidityValueText = view.findViewById(R.id.humidityValue);
@@ -49,13 +50,14 @@ public class HomeFragment extends Fragment {
         moistureCard = view.findViewById(R.id.moistureCard);
         humidityCard = view.findViewById(R.id.humidityCard);
 
-        // Initialize Firebase
+        //Initialize Firebase
         sensorDataRef = FirebaseDatabase.getInstance().getReference("sensorData");
         fetchInitialValues(); // Fetch initial values
 
         return view;
     }
 
+    //Retrieves the most recent sensor values from Firebase and starts real-time listening
     private void fetchInitialValues() {
         sensorDataRef.limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -100,6 +102,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    //Continuously listens for new sensor data and updates the UI when changes occur
     private void attachRealTimeListener() {
         sensorDataRef.limitToLast(1).addValueEventListener(new ValueEventListener() {
             @Override
@@ -133,6 +136,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    //Updates the displayed sensor values and triggers animations if the values have changed
     private void updateValues(String tempValue, String moistureValue, String humidityValue) {
         if (!tempValue.equals(prevTemp.replace(" °C", "")) ||
                 !moistureValue.equals(prevMoisture.replace(" %", "")) ||
@@ -158,6 +162,7 @@ public class HomeFragment extends Fragment {
         humidityValueText.setText(humidityValue + " %");
     }
 
+    //Plays a color and elevation animation when gets an update
     private void animateCardChange(MaterialCardView card) {
         if (getContext() != null) {
             ObjectAnimator elevationAnim = ObjectAnimator.ofFloat(card, "cardElevation", 8f, 0f);

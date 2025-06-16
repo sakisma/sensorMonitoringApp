@@ -23,6 +23,7 @@ public class DateRangeSpinnerAdapter extends ArrayAdapter<String> {
         void onDateRangeSelected(Date startDate, Date endDate);
     }
 
+    //Initializes the adapter with 4 date options and stores the context and listener
     public DateRangeSpinnerAdapter(@NonNull Context context, OnDateRangeSelectedListener listener) {
         super(context, android.R.layout.simple_spinner_item, new String[]{
                 "Last 24 Hours",
@@ -45,6 +46,7 @@ public class DateRangeSpinnerAdapter extends ArrayAdapter<String> {
         return textView;
     }
 
+    //Handles user selection
     public void handleDateRangeSelection(int position) {
         endCalendar = Calendar.getInstance();
         startCalendar = Calendar.getInstance();

@@ -28,6 +28,7 @@ public class StatisticsFragment extends Fragment {
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private Chip dateRangeChip;
 
+    //Initializes UI, shows current month stats and sets listener for DateRangeChip
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_statistics, container, false);
@@ -54,6 +55,7 @@ public class StatisticsFragment extends Fragment {
         return view;
     }
 
+    //Calculates and displays stats for the current month
     private void displayCurrentMonthStatistics() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, 1);
@@ -62,6 +64,7 @@ public class StatisticsFragment extends Fragment {
         displayStatistics();
     }
 
+    //Allows date selection and refreshes statistics
     private void openDateRangePicker() {
         MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
         MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
@@ -81,6 +84,7 @@ public class StatisticsFragment extends Fragment {
         picker.show(getChildFragmentManager(), picker.toString());
     }
 
+    //Fetches DataPoints from DB, calculates max min average and displays on UI
     private void displayStatistics() {
         List<DatabaseHelper.DataPoint> dataPoints = dbHelper.getDataPoints(startDate, endDate);
 

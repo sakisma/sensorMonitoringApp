@@ -69,6 +69,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 });
     }
 
+    //Creates and shows a local notification with a title and message
     private void sendNotification(String title, String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

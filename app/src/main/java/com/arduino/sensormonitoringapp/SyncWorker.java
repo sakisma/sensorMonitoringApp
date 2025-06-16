@@ -38,6 +38,7 @@ public class SyncWorker extends Worker {
         createNotificationChannel();
     }
 
+    //Creates a notification channel for sync notifications
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -51,6 +52,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Returns a Notification object with the given content also displays sync progress
     private Notification createSyncNotification(String content) {
         return new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setContentTitle("Data Sync")
@@ -61,6 +63,7 @@ public class SyncWorker extends Worker {
                 .build();
     }
 
+    //Main function called by the Worker
     @NonNull
     @Override
     public Result doWork() {
@@ -92,6 +95,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Performs actual sync from Firebase to SQLite
     private Result syncData(DatabaseReference sensorDataRef,
                             DatabaseHelper databaseHelper,
                             NotificationManager notificationManager) {
@@ -170,6 +174,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Attempts to delete previously failed deletions from Firebase
     private void retryFailedDeletions(DatabaseReference sensorDataRef,
                                       DatabaseHelper databaseHelper,
                                       NotificationManager notificationManager) {
@@ -218,6 +223,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Checks if a record is older than 2 hours
     private boolean isRecordOlderThanTwoHours(String date, String time) {
         try {
             // Assuming date format is "yyyy-MM-dd" and time is "HH:mm:ss"
@@ -233,6 +239,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Processes a specific Firebase entry
     private boolean processRecord(String date, DataSnapshot timeSnapshot, DatabaseHelper databaseHelper) {
         String time = timeSnapshot.getKey();
         Double temp = timeSnapshot.child("temp").getValue(Double.class);

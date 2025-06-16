@@ -46,11 +46,13 @@ public class HeatmapFragment extends Fragment {
     // Scale factor to maintain precision when storing double as int
     private static final int VALUE_SCALE = 100;
 
+    //Inflate the layout
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_heatmap, container, false);
     }
 
+    //Initializes UI and data
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -182,6 +184,7 @@ public class HeatmapFragment extends Fragment {
         heatMap.xZoom().setToPointsCount(7, false, null);
     }
 
+    //Returns the measurements unit for the selected metric
     private String getMetricUnit() {
         switch (selectedMetric) {
             case "temperature":
@@ -273,6 +276,7 @@ public class HeatmapFragment extends Fragment {
         heatMap.data(data);
     }
 
+    //Calculates average sensor values per day from a database cursor and stores them in a map
     private void calculateDailyAverages(Cursor cursor, Map<String, Double> dataMap) {
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -324,6 +328,7 @@ public class HeatmapFragment extends Fragment {
         }
     }
 
+    //Returns a color code string based on the normalized value and the selected metric
     private String getColorForValue(double normalizedValue) {
         if (normalizedValue <= 0) return "#F5F5F5";
 
@@ -343,6 +348,7 @@ public class HeatmapFragment extends Fragment {
         else return colors[7];
     }
 
+    //Creates a heatmap data entry with scaled value and custom fill color
     private static class CustomHeatDataEntry extends HeatDataEntry {
         CustomHeatDataEntry(String dayOfMonth, String month, double value, String fill) {
             super(dayOfMonth, month, value == 0 ? 0 : (int) (value * VALUE_SCALE));
@@ -350,6 +356,7 @@ public class HeatmapFragment extends Fragment {
         }
     }
 
+    //Closes the database connection when the fragment view is change
     @Override
     public void onDestroyView() {
         databaseHelper.close();

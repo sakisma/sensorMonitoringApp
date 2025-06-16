@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     private BottomNavigationView bottomNavigationView;
     private static final String TAG = "MainActivity";
 
+    //Initializes UI, Firebase, SQlite DB, Sync and save the FCM token
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         scheduleSync();
     }
 
+    //Schedules Sync with work manager
     private void scheduleSync() {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
                 });
     }
 
+    //Takes FCM token and Saves it in Firebase
     private void setupFirebaseMessaging() {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -107,8 +110,10 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
     @Override
     protected void onResume() {
         super.onResume();
+//        fetchLatestData();
     }
 
+    //Load the Fragments by user command
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         Fragment fragment;
@@ -131,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationBarView
         return true;
     }
 
+    //Replace the fragment with the users choice
     private void loadFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();

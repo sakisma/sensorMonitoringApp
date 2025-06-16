@@ -40,6 +40,7 @@ public class HistoricalDataFragment extends Fragment {
     private String startDate, endDate;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
+    //Initializes UI, dropdowns and charts
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_historical_data, container, false);
@@ -59,6 +60,7 @@ public class HistoricalDataFragment extends Fragment {
         return view;
     }
 
+    //Sets up the dropdown menu for Chart type, time period and grouping (daily, weekly, total)
     private void setupDropdowns() {
         String[] aggregations = {"Daily", "Weekly", "Total"};
         ArrayAdapter<String> aggregationAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, aggregations);
@@ -88,6 +90,7 @@ public class HistoricalDataFragment extends Fragment {
         });
     }
 
+    //Sets date range
     private void setDateRange(String range) {
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();
@@ -115,6 +118,7 @@ public class HistoricalDataFragment extends Fragment {
         updateCharts();
     }
 
+    //Let a user select dates with a picker and refreshes charts
     private void openDateRangePicker() {
         MaterialDatePicker.Builder<Pair<Long, Long>> builder = MaterialDatePicker.Builder.dateRangePicker();
         MaterialDatePicker<Pair<Long, Long>> picker = builder.build();
@@ -128,6 +132,7 @@ public class HistoricalDataFragment extends Fragment {
         picker.show(getChildFragmentManager(), picker.toString());
     }
 
+    //Retrieves and displays data based on the user selection
     private void updateCharts() {
         List<DatabaseHelper.DataPoint> dataPoints = dbHelper.getDataPoints(startDate, endDate);
         if (selectedChartType.equals("Line Chart")) {
@@ -137,6 +142,7 @@ public class HistoricalDataFragment extends Fragment {
         }
     }
 
+    //Displays bar charts for temperature and humidity
     private void showLineCharts(List<DatabaseHelper.DataPoint> dataPoints) {
         temperatureChart.setVisibility(View.VISIBLE);
         moistureChart.setVisibility(View.VISIBLE);
@@ -163,6 +169,8 @@ public class HistoricalDataFragment extends Fragment {
         temperatureChart.invalidate();
         moistureChart.invalidate();
     }
+
+    //Displays bar charts based on selected grouping
     private void showBarCharts(List<DatabaseHelper.DataPoint> dataPoints) {
         temperatureChart.setVisibility(View.GONE);
         moistureChart.setVisibility(View.GONE);
@@ -203,6 +211,7 @@ public class HistoricalDataFragment extends Fragment {
         moistureBarChart.invalidate();
     }
 
+    //Calculates averages daily
     private List<DailyAverage> calculateDailyAverages(List<DatabaseHelper.DataPoint> dataPoints, boolean isTemperature) {
         List<DailyAverage> dailyAverages = new ArrayList<>();
         SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -233,6 +242,7 @@ public class HistoricalDataFragment extends Fragment {
         return dailyAverages;
     }
 
+    //Calculates averages weekly
     private List<DailyAverage> calculateWeeklyAverages(List<DatabaseHelper.DataPoint> dataPoints, boolean isTemperature) {
         List<DailyAverage> weeklyAverages = new ArrayList<>();
         SimpleDateFormat weekFormat = new SimpleDateFormat("yyyy-ww", Locale.getDefault()); // year and week of year
@@ -266,6 +276,7 @@ public class HistoricalDataFragment extends Fragment {
         return weeklyAverages;
     }
 
+    //Calculates averages totally
     private List<DailyAverage> calculateTotalAverages(List<DatabaseHelper.DataPoint> dataPoints, boolean isTemperature) {
         List<DailyAverage> totalAverages = new ArrayList<>();
         double sum = 0;
@@ -287,6 +298,7 @@ public class HistoricalDataFragment extends Fragment {
         return totalAverages;
     }
 
+    //Converts string into date
     private Date parseDate(String dateString) {
         try {
             return dateFormat.parse(dateString);
@@ -296,6 +308,7 @@ public class HistoricalDataFragment extends Fragment {
         }
     }
 
+    //Defines a simple data structure to store a days name and its corresponding average value
     private static class DailyAverage {
         String day;
         double average;
