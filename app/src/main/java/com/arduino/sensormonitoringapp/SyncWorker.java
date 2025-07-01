@@ -38,6 +38,7 @@ public class SyncWorker extends Worker {
         createNotificationChannel();
     }
 
+    //Creates a notification channel for sync notifications
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -51,6 +52,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Returns a Notification object with the given content also displays sync progress
     private Notification createSyncNotification(String content) {
         return new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setContentTitle("Data Sync")
@@ -61,7 +63,7 @@ public class SyncWorker extends Worker {
                 .build();
     }
 
-
+    //Main function called by the Worker
     @NonNull
     @Override
     public Result doWork() {
@@ -93,6 +95,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Performs actual sync from Firebase to SQLite
     private Result syncData(DatabaseReference sensorDataRef,
                             DatabaseHelper databaseHelper,
                             NotificationManager notificationManager) {
@@ -171,6 +174,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Attempts to delete previously failed deletions from Firebase
     private void retryFailedDeletions(DatabaseReference sensorDataRef,
                                       DatabaseHelper databaseHelper,
                                       NotificationManager notificationManager) {
@@ -219,83 +223,7 @@ public class SyncWorker extends Worker {
         }
     }
 
-//    private Result syncData(DatabaseReference sensorDataRef,
-//                            DatabaseHelper databaseHelper,
-//                            NotificationManager notificationManager) {
-//        final CountDownLatch latch = new CountDownLatch(1);
-//        final Result[] result = {Result.success()};
-//        final AtomicInteger processedCount = new AtomicInteger(0);
-//
-//        sensorDataRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dateSnapshots) {
-//                int totalRecords = 0;
-//                int unsyncedRecords = 0;
-//
-//                // First pass to count records
-//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        totalRecords++;
-//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-//                        if (isSynced == null || !isSynced) {
-//                            unsyncedRecords++;
-//                        }
-//                    }
-//                }
-//
-//                notificationManager.notify(1, createSyncNotification(
-//                        "Syncing " + unsyncedRecords + " of " + totalRecords + " records"));
-//
-//                // Second pass to process data
-//                for (DataSnapshot dateSnapshot : dateSnapshots.getChildren()) {
-//                    String date = dateSnapshot.getKey();
-//
-//                    for (DataSnapshot timeSnapshot : dateSnapshot.getChildren()) {
-//                        Boolean isSynced = timeSnapshot.child("sync").getValue(Boolean.class);
-//                        if (isSynced != null && isSynced) {
-//                            continue;
-//                        }
-//
-//                        if (processRecord(date, timeSnapshot, databaseHelper)) {
-//                            int processed = processedCount.incrementAndGet();
-//
-//                            // Update progress every 10 records
-//                            if (processed % 10 == 0) {
-//                                notificationManager.notify(1, createSyncNotification(
-//                                        "Synced " + processed + " of " + unsyncedRecords + " records"));
-//                            }
-//
-//                            if (processed >= BATCH_SIZE) {
-//                                break;
-//                            }
-//                        }
-//                    }
-//
-//                    if (processedCount.get() >= BATCH_SIZE) {
-//                        break;
-//                    }
-//                }
-//
-//                result[0] = processedCount.get() > 0 ? Result.retry() : Result.success();
-//                latch.countDown();
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e(TAG, "Sync cancelled: " + error.getMessage());
-//                result[0] = Result.failure();
-//                latch.countDown();
-//            }
-//        });
-//
-//        try {
-//            latch.await(30, TimeUnit.SECONDS);
-//            return result[0];
-//        } catch (InterruptedException e) {
-//            return Result.retry();
-//        }
-//    }
-
+    //Checks if a record is older than 2 hours
     private boolean isRecordOlderThanTwoHours(String date, String time) {
         try {
             // Assuming date format is "yyyy-MM-dd" and time is "HH:mm:ss"
@@ -311,6 +239,7 @@ public class SyncWorker extends Worker {
         }
     }
 
+    //Processes a specific Firebase entry
     private boolean processRecord(String date, DataSnapshot timeSnapshot, DatabaseHelper databaseHelper) {
         String time = timeSnapshot.getKey();
         Double temp = timeSnapshot.child("temp").getValue(Double.class);
@@ -345,8 +274,7 @@ public class SyncWorker extends Worker {
         } catch (Exception e) {
             Log.e(TAG, "Error processing record: " + date + " " + time, e);
             return false;
-        }
-        finally {
+        } finally {
             databaseHelper.close();
         }
     }

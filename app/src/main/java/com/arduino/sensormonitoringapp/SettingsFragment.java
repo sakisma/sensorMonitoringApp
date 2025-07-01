@@ -32,8 +32,7 @@ public class SettingsFragment extends Fragment {
     private MaterialButton saveThresholdsButton;
     private boolean thresholdsChanged = false;
 
-
-
+    //Initializes UI components, loads saved preferences, sets listeners, and checks if it's the first time the app is launched
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
@@ -69,6 +68,7 @@ public class SettingsFragment extends Fragment {
         return view;
     }
 
+    //Checks if it's the first launch of the app. If true, sends default threshold values to Firebase and sets the firstLaunch flag to false.
     private void sendDefaultValuesToFirebaseIfNeeded() {
         SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
         boolean firstLaunch = prefs.getBoolean("firstLaunch", true);
@@ -90,6 +90,7 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    //Loads saved settings (thresholds and notifications) from SharedPreferences and displays them in the UI fields
     private void loadSettings() {
         notificationsSwitch.setChecked(sharedPreferences.getBoolean("notificationsEnabled", true));
         maxTempThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("maxTempThreshold", 30.0f)));
@@ -100,6 +101,7 @@ public class SettingsFragment extends Fragment {
         minHumidityThresholdEditText.setText(String.valueOf(sharedPreferences.getFloat("minHumidityThreshold", 15.0f)));
     }
 
+    //Listens for changes in threshold input fields. When changed, it enables the save button
     private TextWatcher thresholdTextWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -114,6 +116,7 @@ public class SettingsFragment extends Fragment {
         public void afterTextChanged(Editable s) {}
     };
 
+    //Saves the notifications toggle state locally and to Firebase
     private void saveSettings() {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("notificationsEnabled", notificationsSwitch.isChecked());
@@ -125,6 +128,7 @@ public class SettingsFragment extends Fragment {
         Toast.makeText(getContext(), "Settings saved", Toast.LENGTH_SHORT).show();
     }
 
+    //Saves all numerical threshold values (temperature, humidity, soil moisture) locally and in Firebase
     private void saveThresholds() {
         try {
             float maxTempThreshold = Float.parseFloat(maxTempThresholdEditText.getText().toString());
@@ -160,10 +164,12 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    //Returns true or false depending on whether notifications are enabled
     public boolean isNotificationsEnabled() {
         return sharedPreferences.getBoolean("notificationsEnabled", true);
     }
 
+    //Returns saved minimum and maximum temperature thresholds in a map
     public Map<String, Float> getMinMaxTempThreshold() {
         Map<String, Float> result = new LinkedHashMap<>();
         result.put("maxTempThreshold", sharedPreferences.getFloat("maxTempThreshold", 30.0f));
@@ -171,6 +177,7 @@ public class SettingsFragment extends Fragment {
         return result;
     }
 
+    //Returns min/max soil moisture thresholds in a map
     public Map<String, Float> getMinMaxMoistureThreshold() {
         Map<String, Float> result = new LinkedHashMap<>();
         result.put("maxMoistureThreshold", sharedPreferences.getFloat("maxMoistureThreshold", 100.0f));
@@ -178,6 +185,7 @@ public class SettingsFragment extends Fragment {
         return result;
     }
 
+    //Returns min/max humidity thresholds in a map
     public Map<String, Float> getMinMaxHumidityThreshold() {
         Map<String, Float> result = new LinkedHashMap<>();
         result.put("maxHumidityThreshold", sharedPreferences.getFloat("maxHumidityThreshold", 45.0f));

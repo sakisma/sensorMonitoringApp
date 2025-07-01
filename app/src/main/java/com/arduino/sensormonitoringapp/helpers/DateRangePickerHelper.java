@@ -24,6 +24,8 @@ public class DateRangePickerHelper extends ArrayAdapter<String> {
         void onDateRangeSelected(Date startDate, Date endDate);
     }
 
+
+    //Initializes adapter with 4 options and saves the context and listener
     public DateRangePickerHelper(@NonNull Context context, OnDateRangeSelectedListener listener) {
         super(context, android.R.layout.simple_spinner_item, new String[]{
                 "Last 24 Hours",
@@ -43,6 +45,7 @@ public class DateRangePickerHelper extends ArrayAdapter<String> {
         return textView;
     }
 
+    //Handles user selection
     public void handleDateRangeSelection(int position) {
         Calendar endCalendar = Calendar.getInstance();
         Calendar startCalendar = Calendar.getInstance();
